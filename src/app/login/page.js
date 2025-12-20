@@ -3,36 +3,54 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const login = () => {
-    if (username === "admin") {
-      sessionStorage.setItem("role", "admin");
-      router.push("/admin/items");
+  const login = async () => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
+    }
+
+    sessionStorage.setItem("role", data.role);
+    sessionStorage.setItem("username", data.username);
+
+    if (data.role === "admin") {
+      router.push("/admin/dashboard");
     } else {
-      sessionStorage.setItem("role", "center");
       router.push("/center/request");
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h3>เข้าสู่ระบบ</h3>
+    <div className="container mt-5" style={{ maxWidth: 400 }}>
+      <h3 className="mb-3">Login</h3>
 
       <input
         className="form-control mb-2"
-        placeholder="ชื่อผู้ใช้"
+        placeholder="Username"
         onChange={e => setUsername(e.target.value)}
       />
 
-      <button className="btn btn-primary" onClick={login}>
-        เข้าสู่ระบบ
-      </button>
+      <input
+        type="password"
+        className="form-control mb-3"
+        placeholder="Password"
+        onChange={e => setPassword(e.target.value)}
+      />
 
-      <p className="mt-3 text-muted">
-        admin = ผู้ดูแลระบบ | อื่น ๆ = ศูนย์อพยพ
-      </p>
+      <button className="btn btn-primary w-100" onClick={login}>
+        Login
+      </button>
     </div>
   );
 }
