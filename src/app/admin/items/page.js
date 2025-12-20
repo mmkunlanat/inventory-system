@@ -4,48 +4,40 @@ import { useRouter } from "next/navigation";
 
 export default function Page() {
   const router = useRouter();
-
-  const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState("");
   const [items, setItems] = useState([]);
+  const [editItem, setEditItem] = useState(null);
 
-  // 🔐 เช็คสิทธิ์ Admin
   useEffect(() => {
-    const role = sessionStorage.getItem("role");
-    if (role !== "admin") {
+    if (sessionStorage.getItem("role") !== "admin") {
       router.push("/login");
     } else {
       loadItems();
     }
   }, []);
 
-  // โหลดรายการสินค้า
   const loadItems = async () => {
     const res = await fetch("/api/items");
     const data = await res.json();
     setItems(data);
   };
 
-  // บันทึกสินค้า
-  const saveItem = async () => {
-    if (!name || !quantity) {
-      alert("กรุณากรอกข้อมูลให้ครบ");
-      return;
-    }
+  // ลบสินค้า
+  const deleteItem = async (id) => {
+    if (!confirm("ต้องการลบสินค้านี้หรือไม่")) return;
 
-    await fetch("/api/items", {
-      method: "POST",
+    await fetch(`/api/items/${id}`, { method: "DELETE" });
+    loadItems();
+  };
+
+  // บันทึกแก้ไข
+  const saveEdit = async () => {
+    await fetch(`/api/items/${editItem._id}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        category: "อาหาร",
-        quantity: Number(quantity),
-        unit: "กล่อง"
-      })
+      body: JSON.stringify(editItem)
     });
 
-    setName("");
-    setQuantity("");
+    setEditItem(null);
     loadItems();
   };
 
@@ -53,36 +45,14 @@ export default function Page() {
     <div>
       <h3>จัดการสินค้าบริจาค</h3>
 
-      {/* ฟอร์มเพิ่มสินค้า */}
-      <div className="card p-3 mb-4">
-        <input
-          className="form-control mb-2"
-          placeholder="ชื่อสินค้า"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
-
-        <input
-          className="form-control mb-2"
-          placeholder="จำนวน"
-          type="number"
-          value={quantity}
-          onChange={e => setQuantity(e.target.value)}
-        />
-
-        <button className="btn btn-primary" onClick={saveItem}>
-          บันทึก
-        </button>
-      </div>
-
-      {/* ตารางแสดงสินค้า */}
       <table className="table table-bordered">
         <thead className="table-dark">
           <tr>
-            <th>ชื่อสินค้า</th>
+            <th>ชื่อ</th>
             <th>ประเภท</th>
-            <th>คงเหลือ</th>
+            <th>จำนวน</th>
             <th>หน่วย</th>
+            <th>จัดการ</th>
           </tr>
         </thead>
         <tbody>
@@ -92,10 +62,61 @@ export default function Page() {
               <td>{item.category}</td>
               <td>{item.quantity}</td>
               <td>{item.unit}</td>
+              <td>
+                <button
+                  className="btn btn-warning btn-sm me-2"
+                  onClick={() => setEditItem(item)}
+                >
+                  แก้ไข
+                </button>
+
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deleteItem(item._id)}
+                >
+                  ลบ
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Modal แก้ไข */}
+      {editItem && (
+        <div className="modal d-block bg-dark bg-opacity-50">
+          <div className="modal-dialog">
+            <div className="modal-content p-3">
+              <h5>แก้ไขสินค้า</h5>
+
+              <input
+                className="form-control mb-2"
+                value={editItem.name}
+                onChange={e =>
+                  setEditItem({ ...editItem, name: e.target.value })
+                }
+              />
+
+              <input
+                type="number"
+                className="form-control mb-2"
+                value={editItem.quantity}
+                onChange={e =>
+                  setEditItem({ ...editItem, quantity: e.target.value })
+                }
+              />
+
+              <button className="btn btn-success me-2" onClick={saveEdit}>
+                บันทึก
+              </button>
+
+              <button className="btn btn-secondary" onClick={() => setEditItem(null)}>
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
