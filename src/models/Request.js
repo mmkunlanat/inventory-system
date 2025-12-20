@@ -1,22 +1,15 @@
 import mongoose from "mongoose";
 
 const RequestSchema = new mongoose.Schema({
-  centerId: {
+  centerName: String,
+  itemId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Center"
+    ref: "Item"
   },
-  items: [
-    {
-      itemId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Item"
-      },
-      quantity: Number
-    }
-  ],
+  quantity: Number,
   status: {
     type: String,
-    default: "pending"
+    default: "pending" // pending | approved | rejected
   },
   createdAt: {
     type: Date,

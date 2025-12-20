@@ -1,51 +1,74 @@
 "use client"
 import { useEffect, useState } from "react";
 
-export default function RequestsPage() {
+export default function Page() {
   const [requests, setRequests] = useState([]);
 
+  const load = async () => {
+    const res = await fetch("/api/requests");
+    setRequests(await res.json());
+  };
+
   useEffect(() => {
-    fetch("/api/requests")
-      .then(res => res.json())
-      .then(setRequests);
+    load();
   }, []);
 
-  const updateStatus = async (id, approve) => {
-    await fetch("/api/requests", {
+  const updateStatus = async (id, status) => {
+    const res = await fetch(`/api/requests/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId: id, approve })
+      body: JSON.stringify({ status })
     });
-    location.reload();
+
+    if (!res.ok) {
+      alert("สินค้าไม่พอ");
+    }
+    load();
   };
 
   return (
-    <div className="container mt-5">
+    <div>
       <h3>คำขอรับบริจาค</h3>
 
-      {requests.map(r => (
-        <div className="card mb-3" key={r._id}>
-          <div className="card-body">
-            <h5>{r.centerId?.name}</h5>
-            <ul>
-              {r.items.map(i => (
-                <li key={i._id}>
-                  {i.itemId?.name} - {i.quantity}
-                </li>
-              ))}
-            </ul>
-
-            <button className="btn btn-success me-2"
-              onClick={() => updateStatus(r._id, true)}>
-              อนุมัติ
-            </button>
-            <button className="btn btn-danger"
-              onClick={() => updateStatus(r._id, false)}>
-              ปฏิเสธ
-            </button>
-          </div>
-        </div>
-      ))}
+      <table className="table table-bordered">
+        <thead className="table-dark">
+          <tr>
+            <th>ศูนย์</th>
+            <th>สินค้า</th>
+            <th>จำนวน</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map(r => (
+            <tr key={r._id}>
+              <td>{r.centerName}</td>
+              <td>{r.itemId?.name}</td>
+              <td>{r.quantity}</td>
+              <td>{r.status}</td>
+              <td>
+                {r.status === "pending" && (
+                  <>
+                    <button
+                      className="btn btn-success btn-sm me-2"
+                      onClick={() => updateStatus(r._id, "approved")}
+                    >
+                      อนุมัติ
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => updateStatus(r._id, "rejected")}
+                    >
+                      ปฏิเสธ
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
