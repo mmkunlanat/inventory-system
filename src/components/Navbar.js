@@ -1,9 +1,11 @@
 "use client"
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
-  const [role, setRole] = useState(null);
+  const router = useRouter();
+  const [role, setRole] = useState(undefined);
 
   useEffect(() => {
     setRole(sessionStorage.getItem("role"));
@@ -11,8 +13,11 @@ export default function Navbar() {
 
   const logout = () => {
     sessionStorage.clear();
-    location.href = "/login";
+    router.push("/login");
   };
+
+  // ⏳ กันกระพริบ
+  if (role === undefined) return null;
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -26,9 +31,18 @@ export default function Navbar() {
           {/* เมนู Admin */}
           {role === "admin" && (
             <>
-              <Link className="nav-link" href="/admin/items">สินค้า</Link>
-              <Link className="nav-link" href="/admin/centers">ศูนย์อพยพ</Link>
-              <Link className="nav-link" href="/admin/requests">คำขอ</Link>
+              <Link className="nav-link" href="/admin/dashboard">
+                Dashboard
+              </Link>
+              <Link className="nav-link" href="/admin/items">
+                สินค้า
+              </Link>
+              <Link className="nav-link" href="/admin/centers">
+                ศูนย์อพยพ
+              </Link>
+              <Link className="nav-link" href="/admin/requests">
+                คำขอ
+              </Link>
             </>
           )}
 
