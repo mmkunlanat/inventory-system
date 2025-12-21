@@ -15,14 +15,10 @@ export default function LoginPage() {
     });
 
     const data = await res.json();
-
     if (!res.ok) {
       alert(data.error);
       return;
     }
-
-    sessionStorage.setItem("role", data.role);
-    sessionStorage.setItem("username", data.username);
 
     if (data.role === "admin") {
       router.push("/admin/dashboard");
@@ -32,25 +28,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: 400 }}>
-      <h3 className="mb-3">Login</h3>
+    <div className="container d-flex justify-content-center align-items-center vh-100">
+      <div className="card shadow p-4" style={{ width: 380 }}>
+        <h4 className="text-center mb-4">ระบบบริจาค</h4>
 
-      <input
-        className="form-control mb-2"
-        placeholder="Username"
-        onChange={e => setUsername(e.target.value)}
-      />
+        <input
+          className="form-control mb-2"
+          placeholder="Username"
+          onChange={e => setUsername(e.target.value)}
+        />
 
-      <input
-        type="password"
-        className="form-control mb-3"
-        placeholder="Password"
-        onChange={e => setPassword(e.target.value)}
-      />
+        <input
+          type="password"
+          className="form-control mb-3"
+          placeholder="Password"
+          onChange={e => setPassword(e.target.value)}
+        />
 
-      <button className="btn btn-primary w-100" onClick={login}>
-        Login
-      </button>
+        <button className="btn btn-primary w-100" onClick={login}>
+          Login
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,12 @@
-"use client"
+"use client";
+
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const router = useRouter();
-  const [role, setRole] = useState(undefined);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     setRole(sessionStorage.getItem("role"));
@@ -16,62 +17,11 @@ export default function Navbar() {
     router.push("/login");
   };
 
-  // ⏳ กันกระพริบ
-  if (role === undefined) return null;
-
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div className="container">
-        <Link className="navbar-brand" href="/">
-          ระบบบริจาค
-        </Link>
-
-        <div className="navbar-nav">
-
-          {/* เมนู Admin */}
-          {role === "admin" && (
-            <>
-              <Link className="nav-link" href="/admin/dashboard">
-                Dashboard
-              </Link>
-              <Link className="nav-link" href="/admin/items">
-                สินค้า
-              </Link>
-              <Link className="nav-link" href="/admin/centers">
-                ศูนย์อพยพ
-              </Link>
-              <Link className="nav-link" href="/admin/requests">
-                คำขอ
-              </Link>
-            </>
-          )}
-
-          {/* เมนู Center */}
-          {role === "center" && (
-            <Link className="nav-link" href="/center/request">
-              ขอรับบริจาค
-            </Link>
-          )}
-
-          {/* ยังไม่ Login */}
-          {!role && (
-            <Link className="nav-link" href="/login">
-              Login
-            </Link>
-          )}
-
-          {/* Logout */}
-          {role && (
-            <button
-              className="btn btn-outline-light ms-3"
-              onClick={logout}
-            >
-              Logout
-            </button>
-          )}
-
-        </div>
-      </div>
+    <nav>
+      <Link href="/">Home</Link>
+      {role === "admin" && <Link href="/admin">Admin</Link>}
+      <button onClick={logout}>Logout</button>
     </nav>
   );
 }
