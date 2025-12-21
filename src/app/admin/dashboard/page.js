@@ -1,106 +1,100 @@
+"use client";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 
 export default function AdminDashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((res) => res.json())
+      .then(setData);
+  }, []);
+
+  if (!data) return null;
+
   return (
     <>
       <Navbar />
 
       <div className="container mt-5">
-
         <h2 className="mb-4 fw-bold">Dashboard ผู้ดูแลระบบ</h2>
 
         <div className="row g-4">
 
-          {/* สินค้าบริจาค */}
-          <div className="col-md-3">
-            <div className="card text-bg-primary shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">สินค้าบริจาค</h5>
-                <p className="card-text fs-4">120</p>
-                <a href="/admin/items" className="btn btn-light btn-sm">
-                  จัดการสินค้า
-                </a>
-              </div>
-            </div>
-          </div>
+          <DashboardCard
+            title="สินค้าบริจาค"
+            value={data.itemsCount}
+            color="primary"
+            link="/admin/items"
+          />
 
-          {/* ศูนย์อพยพ */}
-          <div className="col-md-3">
-            <div className="card text-bg-success shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">ศูนย์อพยพ</h5>
-                <p className="card-text fs-4">8</p>
-                <a href="/admin/centers" className="btn btn-light btn-sm">
-                  ดูศูนย์
-                </a>
-              </div>
-            </div>
-          </div>
+          <DashboardCard
+            title="ศูนย์อพยพ"
+            value={data.centersCount}
+            color="success"
+            link="/admin/centers"
+          />
 
-          {/* คำขอรับบริจาค */}
-          <div className="col-md-3">
-            <div className="card text-bg-warning shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">คำขอรับบริจาค</h5>
-                <p className="card-text fs-4">15</p>
-                <a href="/admin/requests" className="btn btn-dark btn-sm">
-                  ตรวจสอบ
-                </a>
-              </div>
-            </div>
-          </div>
+          <DashboardCard
+            title="คำขอทั้งหมด"
+            value={data.requestsCount}
+            color="warning"
+            link="/admin/requests"
+          />
 
-          {/* รายการรออนุมัติ */}
-          <div className="col-md-3">
-            <div className="card text-bg-danger shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">รออนุมัติ</h5>
-                <p className="card-text fs-4">5</p>
-                <a href="/admin/requests" className="btn btn-light btn-sm">
-                  ดำเนินการ
-                </a>
-              </div>
-            </div>
-          </div>
+          <DashboardCard
+            title="รออนุมัติ"
+            value={data.pendingCount}
+            color="danger"
+            link="/admin/requests"
+          />
 
         </div>
 
-        {/* ตารางสรุป */}
+        {/* คำขอล่าสุด */}
         <div className="card mt-5 shadow-sm">
           <div className="card-header fw-bold">
-            สรุปการจัดสรรล่าสุด
+            คำขอรับบริจาคล่าสุด
           </div>
           <div className="card-body p-0">
             <table className="table mb-0">
               <thead className="table-light">
                 <tr>
-                  <th>ศูนย์อพยพ</th>
+                  <th>ศูนย์</th>
                   <th>สินค้า</th>
                   <th>จำนวน</th>
                   <th>สถานะ</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>ศูนย์ A</td>
-                  <td>ข้าวสาร</td>
-                  <td>50 ถุง</td>
-                  <td>
-                    <span className="badge bg-success">
-                      อนุมัติแล้ว
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>ศูนย์ B</td>
-                  <td>น้ำดื่ม</td>
-                  <td>100 แพ็ค</td>
-                  <td>
-                    <span className="badge bg-warning text-dark">
-                      รอดำเนินการ
-                    </span>
-                  </td>
-                </tr>
+                {data.latestRequests.map((r) => (
+                  <tr key={r._id}>
+                    <td>{r.centerName}</td>
+                    <td>{r.itemName}</td>
+                    <td>{r.quantity}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          r.status === "approved"
+                            ? "bg-success"
+                            : r.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-warning text-dark"
+                        }`}
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {data.latestRequests.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="text-center">
+                      ไม่มีข้อมูล
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -108,5 +102,22 @@ export default function AdminDashboard() {
 
       </div>
     </>
+  );
+}
+
+/* การ์ดเล็ก ๆ */
+function DashboardCard({ title, value, color, link }) {
+  return (
+    <div className="col-md-3">
+      <div className={`card text-bg-${color} shadow-sm h-100`}>
+        <div className="card-body">
+          <h5 className="card-title">{title}</h5>
+          <p className="fs-3">{value}</p>
+          <a href={link} className="btn btn-light btn-sm">
+            ดูรายละเอียด
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
