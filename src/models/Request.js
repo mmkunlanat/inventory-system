@@ -1,21 +1,17 @@
 import mongoose from "mongoose";
 
-const RequestSchema = new mongoose.Schema({
-  centerName: String,
-  itemId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Item"
+const RequestSchema = new mongoose.Schema(
+  {
+    centerName: String,
+    itemName: String,
+    quantity: Number,
+    status: {
+      type: String,
+      default: "pending", // pending | approved | rejected
+    },
   },
-  quantity: Number,
-  status: {
-    type: String,
-    default: "pending" // pending | approved | rejected
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  { timestamps: true }
+);
 
 export default mongoose.models.Request ||
   mongoose.model("Request", RequestSchema);

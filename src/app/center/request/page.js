@@ -1,56 +1,59 @@
-"use client"
-import { useEffect, useState } from "react";
+"use client";
+import { useState } from "react";
+import Navbar from "@/components/Navbar";
 
-export default function Page() {
-  const [items, setItems] = useState([]);
-  const [itemId, setItemId] = useState("");
+export default function CenterRequest() {
+  const [centerName, setCenterName] = useState("");
+  const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("");
 
-  useEffect(() => {
-    fetch("/api/items")
-      .then(res => res.json())
-      .then(setItems);
-  }, []);
-
-  const submit = async () => {
+  const submitRequest = async () => {
     await fetch("/api/requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        centerName: "ศูนย์อพยพ A",
-        itemId,
-        quantity
-      })
+        centerName,
+        itemName,
+        quantity,
+      }),
     });
-    alert("ส่งคำขอแล้ว");
+    alert("ส่งคำขอเรียบร้อย");
+    setItemName("");
+    setQuantity("");
   };
 
   return (
-    <div className="container">
-      <h3>ขอรับบริจาค</h3>
+    <>
+      <Navbar />
+      <div className="container mt-5">
+        <h3>ขอรับสินค้าบริจาค</h3>
 
-      <select
-        className="form-control mb-2"
-        onChange={e => setItemId(e.target.value)}
-      >
-        <option>-- เลือกสินค้า --</option>
-        {items.map(i => (
-          <option key={i._id} value={i._id}>
-            {i.name} (คงเหลือ {i.quantity})
-          </option>
-        ))}
-      </select>
+        <input
+          className="form-control mb-2"
+          placeholder="ชื่อศูนย์อพยพ"
+          value={centerName}
+          onChange={(e) => setCenterName(e.target.value)}
+        />
 
-      <input
-        type="number"
-        className="form-control mb-2"
-        placeholder="จำนวน"
-        onChange={e => setQuantity(e.target.value)}
-      />
+        <input
+          className="form-control mb-2"
+          placeholder="ชื่อสินค้า"
+          value={itemName}
+          onChange={(e) => setItemName(e.target.value)}
+        />
 
-      <button className="btn btn-primary" onClick={submit}>
-        ส่งคำขอ
-      </button>
-    </div>
+        <input
+          className="form-control mb-2"
+          type="number"
+          placeholder="จำนวน"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+        />
+
+        <button className="btn btn-success" onClick={submitRequest}>
+          ส่งคำขอ
+        </button>
+      </div>
+    </>
   );
 }

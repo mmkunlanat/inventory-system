@@ -1,16 +1,17 @@
-import { connectDB } from "@/lib/mongodb";
-import Request from "@/models/Request";
-import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
-export async function POST(req) {
-  await connectDB();
-  const body = await req.json();
-  const request = await Request.create(body);
-  return NextResponse.json(request);
-}
+const RequestSchema = new mongoose.Schema(
+  {
+    centerName: String,
+    itemName: String,
+    quantity: Number,
+    status: {
+      type: String,
+      default: "pending", // pending | approved | rejected
+    },
+  },
+  { timestamps: true }
+);
 
-export async function GET() {
-  await connectDB();
-  const data = await Request.find().populate("itemId");
-  return NextResponse.json(data);
-}
+export default mongoose.models.Request ||
+  mongoose.model("Request", RequestSchema);
