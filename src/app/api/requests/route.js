@@ -38,8 +38,11 @@ export async function PUT(req) {
 
   // ถ้าอนุมัติ → ตัดสต๊อก
   if (status === "approved") {
-    // Find item by name (since Request schema uses itemName)
-    const item = await Item.findOne({ name: request.itemName });
+    // Find item by name (case-insensitive and trimmed)
+    const trimmedItemName = request.itemName.trim();
+    const item = await Item.findOne({
+      name: { $regex: new RegExp(`^${trimmedItemName}$`, "i") }
+    });
 
     if (!item) {
       return NextResponse.json(

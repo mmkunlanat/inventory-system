@@ -29,8 +29,10 @@ export async function POST(req) {
     const user = await User.create({
       username,
       password: hashedPassword,
-      role: role || "center"
+      role: "center" // Force center role for all new registrations
     });
+
+    console.log("User created successfully:", username);
 
     return NextResponse.json({
       message: "ลงทะเบียนสำเร็จ",
@@ -39,7 +41,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Register Error:", error);
     return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดบนเซิร์ฟเวอร์" },
+      { error: "เกิดข้อผิดพลาดบนเซิร์ฟเวอร์: " + error.message },
       { status: 500 }
     );
   }

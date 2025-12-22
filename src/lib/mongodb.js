@@ -18,10 +18,24 @@ async function connectDB() {
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      connectTimeoutMS: 10000, // 10 seconds
+      socketTimeoutMS: 45000,  // 45 seconds
     });
   }
 
   cached.conn = await cached.promise;
+
+  // Try to repair indexes if needed
+  try {
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections({ name: 'users' }).toArray();
+    if (collections.length > 0) {
+      await db.collection('users').dropIndex('email_1').catch(() => { });
+    }
+  } catch (e) {
+    // Ignore index drop errors
+  }
+
   return cached.conn;
 }
 

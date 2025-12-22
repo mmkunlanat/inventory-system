@@ -1,22 +1,13 @@
 "use client";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 import "./home.css";
 
 export default function HomePage() {
   return (
     <div className="home-container">
+      <Navbar />
       {/* Background Decor */}
-      <div className="bg-glow"></div>
-
-      <header className="home-header">
-        <div className="container">
-          <div className="logo">🆘 RescueSync</div>
-          <nav>
-            <Link href="/login" className="nav-link">เข้าสู่ระบบ</Link>
-            <Link href="/register" className="nav-link btn-signup">ลงทะเบียน</Link>
-          </nav>
-        </div>
-      </header>
 
       <main className="hero-section">
         <div className="hero-content">
