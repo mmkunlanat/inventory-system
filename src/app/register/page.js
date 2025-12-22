@@ -89,15 +89,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="input-group">
-            <label className="input-label">บทบาทผู้ใช้งาน</label>
-            <div className="input-box">
-              <select name="role" value={formData.role} onChange={handleChange}>
-                <option value="center">ศูนย์อพยพ / ศูนย์ช่วยเหลือ</option>
-                <option value="admin">ผู้ดูแลระบบคลังสินค้า</option>
-              </select>
-            </div>
-          </div>
+          {/* Role selection hidden as per admin restriction request */}
+          <input type="hidden" name="role" value="center" />
 
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? "กำลังบันทึก..." : "ยืนยันการสมัครสมาชิก"}

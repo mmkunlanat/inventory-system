@@ -29,7 +29,7 @@ export async function POST(req) {
     const user = await User.create({
       username,
       password: hashedPassword,
-      role: role || "center"
+      role: "center" // Force center role for all new registrations
     });
 
     return NextResponse.json({

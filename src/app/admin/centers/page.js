@@ -43,72 +43,84 @@ export default function AdminCenters() {
 
   return (
     <div className="dashboard-content">
-
       <header className="page-header">
-        <h1 className="page-title">จัดการศูนย์อพยพ</h1>
-        <p className="page-description">เพิ่ม ลบ และแก้ไขข้อมูลศูนย์อพยพในเครือข่าย</p>
+        <div className="header-left">
+          <h1 className="page-title">🏥 จัดการศูนย์ปฏิบัติการ</h1>
+          <p className="page-description">เพิ่มและจัดการข้อมูลศูนย์อพยพ/หน่วยงานรับบริจาคในเครือข่าย</p>
+        </div>
       </header>
 
-      {/* เพิ่มศูนย์ */}
-      <div className="card p-3 mb-4">
-        <input
-          className="form-control mb-2"
-          placeholder="ชื่อศูนย์"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="form-control mb-2"
-          placeholder="ที่ตั้ง"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-        <input
-          className="form-control mb-2"
-          placeholder="ติดต่อ"
-          value={contact}
-          onChange={(e) => setContact(e.target.value)}
-        />
-        <button className="btn btn-primary" onClick={addCenter}>
-          เพิ่มศูนย์อพยพ
+      {/* เพิ่มศูนย์แบบ Premium Form */}
+      <div className="form-card">
+        <h3 style={{ marginBottom: '24px', fontSize: '18px', fontWeight: '700' }}>➕ เพิ่มศูนย์ปฏิบัติการใหม่</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+          <input
+            className="premium-input"
+            placeholder="ชื่อศูนย์ (เช่น ศูนย์ดอนเมือง)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className="premium-input"
+            placeholder="ที่ตั้ง/พิกัด"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+          <input
+            className="premium-input"
+            placeholder="เบอร์ติดต่อ"
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+          />
+        </div>
+        <button className="btn-primary-premium" onClick={addCenter} style={{ width: '100%' }}>
+          ยืนยันการเพิ่มศูนย์
         </button>
       </div>
 
-      {/* ตารางศูนย์ */}
-      <table className="table table-bordered">
-        <thead className="table-light">
-          <tr>
-            <th>ชื่อศูนย์</th>
-            <th>ที่ตั้ง</th>
-            <th>ติดต่อ</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {centers.map((center) => (
-            <tr key={center._id}>
-              <td>{center.name}</td>
-              <td>{center.location}</td>
-              <td>{center.contact}</td>
-              <td>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => deleteCenter(center._id)}
-                >
-                  ลบ
-                </button>
-              </td>
-            </tr>
-          ))}
-          {centers.length === 0 && (
-            <tr>
-              <td colSpan="4" className="text-center">
-                ยังไม่มีศูนย์อพยพ
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {/* ตารางศูนย์แบบ Premium */}
+      <div className="table-card">
+        <div className="card-header">
+          <h3>รายชื่อศูนย์ปฏิบัติการทั้งหมด</h3>
+        </div>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>🏥 ชื่อศูนย์</th>
+                <th>📍 ที่ตั้ง</th>
+                <th>📞 ติดต่อ</th>
+                <th>⚙️ จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {centers.map((center) => (
+                <tr key={center._id}>
+                  <td style={{ fontWeight: '700' }}>{center.name}</td>
+                  <td>{center.location}</td>
+                  <td>{center.contact}</td>
+                  <td>
+                    <button
+                      className="btn-action delete"
+                      style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                      onClick={() => deleteCenter(center._id)}
+                    >
+                      ลบข้อมูล
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {centers.length === 0 && (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+                    ยังไม่มีศูนย์อพยพในระบบ
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
