@@ -19,16 +19,17 @@ export async function middleware(request) {
 
             // Role-based protection
             if (pathname.startsWith('/admin') && payload.role !== 'admin') {
-                return NextResponse.redirect(new URL('/center/request', request.url));
+                // If not admin but logged in, send to their own landing or login with error
+                return NextResponse.redirect(new URL('/center/request?error=unauthorized_admin', request.url));
             }
 
             if (pathname.startsWith('/center') && payload.role !== 'center') {
-                return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+                return NextResponse.redirect(new URL('/admin/dashboard?error=unauthorized_center', request.url));
             }
 
             return NextResponse.next();
         } catch (err) {
-            return NextResponse.redirect(new URL('/login', request.url));
+            return NextResponse.redirect(new URL('/login?error=session_expired', request.url));
         }
     }
 

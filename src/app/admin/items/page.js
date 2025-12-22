@@ -8,6 +8,8 @@ export default function Page() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [editItem, setEditItem] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({ name: "", category: "", quantity: 0, unit: "" });
 
   useEffect(() => {
     loadItems();
@@ -43,82 +45,183 @@ export default function Page() {
     loadItems();
   };
 
+  // เพิ่มสินค้าใหม่
+  const saveNewItem = async () => {
+    if (!newItem.name) return alert("กรุณาระบุชื่อสินค้า");
+
+    await fetch("/api/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newItem)
+    });
+
+    setNewItem({ name: "", category: "", quantity: 0, unit: "" });
+    setShowAddModal(false);
+    loadItems();
+  };
+
 
   return (
     <div className="dashboard-content">
       <header className="page-header">
-        <h1 className="page-title">จัดการสินค้าบริจาค</h1>
-        <p className="page-description">ตรวจสอบ แก้ไข และลบสินค้าในคลังบริจาค</p>
+        <div className="header-left">
+          <h1 className="page-title">📦 จัดการคลังสินค้า</h1>
+          <p className="page-description">เพิ่ม แก้ไข และติดตามจำนวนสินค้าบริจาคในระบบ</p>
+        </div>
+        <div className="header-actions">
+          <button className="btn-primary-premium" onClick={() => setShowAddModal(true)}>➕ เพิ่มสินค้าใหม่</button>
+        </div>
       </header>
 
-      <table className="table table-bordered">
-        <thead className="table-dark">
-          <tr>
-            <th>ชื่อ</th>
-            <th>ประเภท</th>
-            <th>จำนวน</th>
-            <th>หน่วย</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item._id}>
-              <td>{item.name}</td>
-              <td>{item.category}</td>
-              <td>{item.quantity}</td>
-              <td>{item.unit}</td>
-              <td>
-                <button
-                  className="btn btn-warning btn-sm me-2"
-                  onClick={() => setEditItem(item)}
-                >
-                  แก้ไข
-                </button>
+      <div className="table-card">
+        <div className="card-header">
+          <h3>รายการสินค้าทั้งหมด</h3>
+        </div>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>📦 ชื่อสินค้า</th>
+                <th>🏷️ ประเภท</th>
+                <th>📊 จำนวนคงเหลือ</th>
+                <th>📏 หน่วย</th>
+                <th>⚙️ จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(item => (
+                <tr key={item._id}>
+                  <td style={{ fontWeight: '700' }}>{item.name}</td>
+                  <td>
+                    <span style={{ background: '#f1f5f9', padding: '4px 10px', borderRadius: '8px', fontSize: '13px' }}>
+                      {item.category}
+                    </span>
+                  </td>
+                  <td style={{ color: item.quantity < 10 ? 'var(--danger)' : 'inherit' }}>
+                    {item.quantity.toLocaleString()}
+                  </td>
+                  <td>{item.unit}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn-action edit"
+                        style={{ background: '#fef3c7', color: '#d97706', border: 'none', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={() => setEditItem(item)}
+                      >
+                        แก้ไข
+                      </button>
 
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => deleteItem(item._id)}
-                >
-                  ลบ
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                      <button
+                        className="btn-action delete"
+                        style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={() => deleteItem(item._id)}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>ไม่มีสินค้าในคลัง</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      {/* Modal แก้ไข */}
+      {/* Premium Edit Modal */}
       {editItem && (
-        <div className="modal d-block bg-dark bg-opacity-50">
-          <div className="modal-dialog">
-            <div className="modal-content p-3">
-              <h5>แก้ไขสินค้า</h5>
+        <div className="premium-modal-overlay">
+          <div className="premium-modal">
+            <h2 style={{ marginBottom: '24px', letterSpacing: '-0.02em' }}>📝 แก้ไขข้อมูลสินค้า</h2>
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px', display: 'block' }}>ชื่อสินค้า</label>
+                <input
+                  className="premium-input"
+                  value={editItem.name}
+                  onChange={e => setEditItem({ ...editItem, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px', display: 'block' }}>จำนวนคงเหลือ</label>
+                <input
+                  type="number"
+                  className="premium-input"
+                  value={editItem.quantity}
+                  onChange={e => setEditItem({ ...editItem, quantity: Number(e.target.value) })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                <button className="btn-primary-premium" style={{ flex: 1 }} onClick={saveEdit}>
+                  บันทึกการแก้ไข
+                </button>
+                <button
+                  className="btn-secondary-premium"
+                  style={{ flex: 1, background: '#f1f5f9', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
+                  onClick={() => setEditItem(null)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddModal && (
+        <div className="premium-modal-overlay">
+          <div className="premium-modal">
+            <h2 style={{ marginBottom: '24px' }}>➕ เพิ่มสินค้าบริจาคใหม่</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <input
-                className="form-control mb-2"
-                value={editItem.name}
-                onChange={e =>
-                  setEditItem({ ...editItem, name: e.target.value })
-                }
+                className="premium-input"
+                placeholder="ชื่อสินค้า (เช่น ข้าวสาร, น้ำดื่ม)"
+                value={newItem.name}
+                onChange={e => setNewItem({ ...newItem, name: e.target.value })}
               />
-
               <input
-                type="number"
-                className="form-control mb-2"
-                value={editItem.quantity}
-                onChange={e =>
-                  setEditItem({ ...editItem, quantity: e.target.value })
-                }
+                className="premium-input"
+                placeholder="หมวดหมู่สินค้า"
+                value={newItem.category}
+                onChange={e => setNewItem({ ...newItem, category: e.target.value })}
               />
-
-              <button className="btn btn-success me-2" onClick={saveEdit}>
-                บันทึก
-              </button>
-
-              <button className="btn btn-secondary" onClick={() => setEditItem(null)}>
-                ยกเลิก
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="number"
+                  className="premium-input"
+                  style={{ flex: 2 }}
+                  placeholder="จำนวน"
+                  value={newItem.quantity}
+                  onChange={e => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
+                />
+                <input
+                  className="premium-input"
+                  style={{ flex: 1 }}
+                  placeholder="หน่วย"
+                  value={newItem.unit}
+                  onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button className="btn-primary-premium" style={{ flex: 1 }} onClick={saveNewItem}>
+                  บันทึกสินค้า
+                </button>
+                <button
+                  className="btn-secondary-premium"
+                  style={{ flex: 1, background: '#f1f5f9', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
+                  onClick={() => setShowAddModal(false)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
             </div>
           </div>
         </div>

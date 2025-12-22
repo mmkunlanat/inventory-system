@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import "./admin-layout.css";
@@ -8,6 +8,20 @@ export default function AdminLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [user, setUser] = useState({ username: "Loading...", role: "" });
+
+    useEffect(() => {
+        fetch("/api/auth/me")
+            .then(res => res.json())
+            .then(data => {
+                if (data.authenticated) {
+                    setUser(data.user);
+                } else {
+                    router.push("/login?error=session_expired");
+                }
+            })
+            .catch(() => router.push("/login"));
+    }, [router]);
 
     const handleLogout = async () => {
         try {
@@ -71,10 +85,10 @@ export default function AdminLayout({ children }) {
                     <div className="header-actions">
                         <div className="notifications">🔔</div>
                         <div className="user-profile">
-                            <div className="avatar">AD</div>
+                            <div className="avatar">{user.username.substring(0, 2).toUpperCase()}</div>
                             <div className="user-info">
-                                <p className="name">Admin User</p>
-                                <p className="role">Super Admin</p>
+                                <p className="name">{user.username}</p>
+                                <p className="role">{user.role}</p>
                             </div>
                         </div>
                     </div>

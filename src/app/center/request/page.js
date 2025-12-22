@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import "./center-request.css";
 
 export default function CenterRequest() {
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     centerName: "",
     itemName: "",
@@ -11,6 +13,12 @@ export default function CenterRequest() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "unauthorized_admin") {
+      setMessage({ type: "error", text: "คุณไม่มีสิทธิ์เข้าถึงหน้า Admin Dashboard กรุณาเข้าสู่ระบบด้วยสิทธิ์ผู้ดูแลระบบ" });
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

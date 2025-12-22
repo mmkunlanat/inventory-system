@@ -5,27 +5,27 @@ import Request from "@/models/Request";
 import Center from "@/models/Center";
 
 export async function GET() {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const itemsCount = await Item.countDocuments();
-  const centersCount = await Center.countDocuments();
-  const requestsCount = await Request.countDocuments();
+    const [itemsCount, centersCount, requestsCount, pendingCount, latestRequests] = await Promise.all([
+      Item.countDocuments(),
+      Center.countDocuments(),
+      Request.countDocuments(),
+      Request.countDocuments({ status: "pending" }),
+      Request.find().sort({ createdAt: -1 }).limit(5).lean()
+    ]);
 
-  const pendingCount = await Request.countDocuments({
-    status: "pending",
-  });
-
-  const latestRequests = await Request.find()
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean();
-
-  return NextResponse.json({
-    itemsCount,
-    centersCount,
-    requestsCount,
-    pendingCount,
-    latestRequests,
-  });
+    return NextResponse.json({
+      itemsCount,
+      centersCount,
+      requestsCount,
+      pendingCount,
+      latestRequests,
+    });
+  } catch (error) {
+    console.error("Dashboard API Error:", error);
+    return NextResponse.json({ error: "Failed to load dashboard data" }, { status: 500 });
+  }
 }
 

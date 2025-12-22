@@ -81,6 +81,30 @@
     color: white;
 }
 
+.user-nav-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-welcome {
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.login-btn {
+    background: #6366f1;
+    color: white !important;
+    padding: 8px 24px;
+    border-radius: 10px;
+}
+
+.login-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
     .nav-links {
         display: none;

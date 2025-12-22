@@ -16,78 +16,121 @@ export default function AdminRequests() {
     fetchRequests();
   }, []);
 
+  const [statusLoading, setStatusLoading] = useState(null);
+
   const updateStatus = async (id, status) => {
-    await fetch("/api/requests", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    fetchRequests();
+    setStatusLoading(id);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert("❌ " + (data.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ"));
+      } else {
+        await fetchRequests();
+      }
+    } catch (err) {
+      alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    } finally {
+      setStatusLoading(null);
+    }
   };
 
   return (
     <div className="dashboard-content">
       <header className="page-header">
-        <h1 className="page-title">คำขอรับบริจาค</h1>
-        <p className="page-description">ตรวจสอบและอนุมัติคำขอรับสินค้าจากศูนย์อพยพต่างๆ</p>
+        <div className="header-left">
+          <h1 className="page-title">📑 คำขอรับบริจาค</h1>
+          <p className="page-description">ตรวจสอบและพิจารณาอนุมัติการกระจายสินค้าไปยังศูนย์อพยพต่างๆ</p>
+        </div>
       </header>
 
-      <table className="table table-bordered">
-        <thead className="table-light">
-          <tr>
-            <th>ศูนย์</th>
-            <th>สินค้า</th>
-            <th>จำนวน</th>
-            <th>สถานะ</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {requests.map((r) => (
-            <tr key={r._id}>
-              <td>{r.centerName}</td>
-              <td>{r.itemName}</td>
-              <td>{r.quantity}</td>
-              <td>
-                <span className={
-                  r.status === "approved"
-                    ? "badge bg-success"
-                    : r.status === "rejected"
-                      ? "badge bg-danger"
-                      : "badge bg-warning text-dark"
-                }>
-                  {r.status}
-                </span>
-              </td>
-              <td>
-                {r.status === "pending" && (
-                  <>
-                    <button
-                      className="btn btn-success btn-sm me-2"
-                      onClick={() => updateStatus(r._id, "approved")}
-                    >
-                      อนุมัติ
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => updateStatus(r._id, "rejected")}
-                    >
-                      ปฏิเสธ
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-          {requests.length === 0 && (
-            <tr>
-              <td colSpan="5" className="text-center">
-                ไม่มีคำขอ
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <div className="table-card">
+        <div className="card-header">
+          <h3>รายการคำขอรับการช่วยเหลือ</h3>
+        </div>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>🏥 ศูนย์อพยพ</th>
+                <th>🎁 สินค้า</th>
+                <th>🔢 จำนวน</th>
+                <th>📋 สถานะ</th>
+                <th>⚙️ จัดการคำขอ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((r) => (
+                <tr key={r._id}>
+                  <td style={{ fontWeight: '700' }}>{r.centerName}</td>
+                  <td style={{ fontWeight: '600', color: 'var(--primary-dark)' }}>{r.itemName}</td>
+                  <td>{r.quantity.toLocaleString()}</td>
+                  <td>
+                    <span className={`status-pill ${r.status}`}>
+                      {r.status === 'pending' ? 'รออนุมัติ' : r.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
+                    </span>
+                  </td>
+                  <td>
+                    {r.status === "pending" ? (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className="btn-action approve"
+                          style={{
+                            background: '#dcfce7',
+                            color: '#16a34a',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            opacity: statusLoading === r._id ? 0.5 : 1
+                          }}
+                          onClick={() => updateStatus(r._id, "approved")}
+                          disabled={statusLoading === r._id}
+                        >
+                          {statusLoading === r._id ? "..." : "อนุมัติ"}
+                        </button>
+                        <button
+                          className="btn-action reject"
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            opacity: statusLoading === r._id ? 0.5 : 1
+                          }}
+                          onClick={() => updateStatus(r._id, "rejected")}
+                          disabled={statusLoading === r._id}
+                        >
+                          {statusLoading === r._id ? "..." : "ปฏิเสธ"}
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600 italic' }}>ดำเนินการแล้ว</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {requests.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+                    ไม่มีรายการคำขอในขณะนี้
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
