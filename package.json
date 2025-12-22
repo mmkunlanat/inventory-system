@@ -2,6 +2,7 @@
   "name": "donation-system",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +10,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.1.0",
+    "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.8",
+    "dotenv": "^17.2.3",
+    "jose": "^5.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.0.2",
+    "next": "^15.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
