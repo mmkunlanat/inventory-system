@@ -8,6 +8,7 @@ export default function AdminCenters() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [contact, setContact] = useState("");
+  const [editCenter, setEditCenter] = useState(null);
 
   const fetchCenters = async () => {
     const res = await fetch("/api/centers");
@@ -20,6 +21,7 @@ export default function AdminCenters() {
   }, []);
 
   const addCenter = async () => {
+    if (!name) return alert("กรุณาระบุชื่อศูนย์");
     await fetch("/api/centers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -28,6 +30,16 @@ export default function AdminCenters() {
     setName("");
     setLocation("");
     setContact("");
+    fetchCenters();
+  };
+
+  const updateCenter = async () => {
+    await fetch("/api/centers", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editCenter),
+    });
+    setEditCenter(null);
     fetchCenters();
   };
 
@@ -100,13 +112,22 @@ export default function AdminCenters() {
                   <td>{center.location}</td>
                   <td>{center.contact}</td>
                   <td>
-                    <button
-                      className="btn-action delete"
-                      style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-                      onClick={() => deleteCenter(center._id)}
-                    >
-                      ลบข้อมูล
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn-action edit"
+                        style={{ background: '#fef3c7', color: '#d97706', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={() => setEditCenter(center)}
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        className="btn-action delete"
+                        style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                        onClick={() => deleteCenter(center._id)}
+                      >
+                        ลบ
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -121,6 +142,46 @@ export default function AdminCenters() {
           </table>
         </div>
       </div>
+      {/* Edit Center Modal */}
+      {editCenter && (
+        <div className="premium-modal-overlay">
+          <div className="premium-modal">
+            <h2 style={{ marginBottom: '24px' }}>📝 แก้ไขข้อมูลศูนย์</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input
+                className="premium-input"
+                placeholder="ชื่อศูนย์"
+                value={editCenter.name}
+                onChange={e => setEditCenter({ ...editCenter, name: e.target.value })}
+              />
+              <input
+                className="premium-input"
+                placeholder="ที่ตั้ง"
+                value={editCenter.location}
+                onChange={e => setEditCenter({ ...editCenter, location: e.target.value })}
+              />
+              <input
+                className="premium-input"
+                placeholder="ติดต่อ"
+                value={editCenter.contact}
+                onChange={e => setEditCenter({ ...editCenter, contact: e.target.value })}
+              />
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button className="btn-primary-premium" style={{ flex: 1 }} onClick={updateCenter}>
+                  บันทึก
+                </button>
+                <button
+                  className="btn-secondary-premium"
+                  style={{ flex: 1, background: '#f1f5f9', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
+                  onClick={() => setEditCenter(null)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

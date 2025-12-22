@@ -8,6 +8,8 @@ export default function Page() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [editItem, setEditItem] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({ name: "", category: "", quantity: 0, unit: "" });
 
   useEffect(() => {
     loadItems();
@@ -43,6 +45,21 @@ export default function Page() {
     loadItems();
   };
 
+  // เพิ่มสินค้าใหม่
+  const saveNewItem = async () => {
+    if (!newItem.name) return alert("กรุณาระบุชื่อสินค้า");
+
+    await fetch("/api/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newItem)
+    });
+
+    setNewItem({ name: "", category: "", quantity: 0, unit: "" });
+    setShowAddModal(false);
+    loadItems();
+  };
+
 
   return (
     <div className="dashboard-content">
@@ -52,7 +69,7 @@ export default function Page() {
           <p className="page-description">เพิ่ม แก้ไข และติดตามจำนวนสินค้าบริจาคในระบบ</p>
         </div>
         <div className="header-actions">
-          <button className="btn-primary-premium">➕ เพิ่มสินค้าใหม่</button>
+          <button className="btn-primary-premium" onClick={() => setShowAddModal(true)}>➕ เพิ่มสินค้าใหม่</button>
         </div>
       </header>
 
@@ -137,7 +154,7 @@ export default function Page() {
                   type="number"
                   className="premium-input"
                   value={editItem.quantity}
-                  onChange={e => setEditItem({ ...editItem, quantity: e.target.value })}
+                  onChange={e => setEditItem({ ...editItem, quantity: Number(e.target.value) })}
                 />
               </div>
 
@@ -149,6 +166,58 @@ export default function Page() {
                   className="btn-secondary-premium"
                   style={{ flex: 1, background: '#f1f5f9', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
                   onClick={() => setEditItem(null)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddModal && (
+        <div className="premium-modal-overlay">
+          <div className="premium-modal">
+            <h2 style={{ marginBottom: '24px' }}>➕ เพิ่มสินค้าบริจาคใหม่</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input
+                className="premium-input"
+                placeholder="ชื่อสินค้า (เช่น ข้าวสาร, น้ำดื่ม)"
+                value={newItem.name}
+                onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+              />
+              <input
+                className="premium-input"
+                placeholder="หมวดหมู่สินค้า"
+                value={newItem.category}
+                onChange={e => setNewItem({ ...newItem, category: e.target.value })}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="number"
+                  className="premium-input"
+                  style={{ flex: 2 }}
+                  placeholder="จำนวน"
+                  value={newItem.quantity}
+                  onChange={e => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
+                />
+                <input
+                  className="premium-input"
+                  style={{ flex: 1 }}
+                  placeholder="หน่วย"
+                  value={newItem.unit}
+                  onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button className="btn-primary-premium" style={{ flex: 1 }} onClick={saveNewItem}>
+                  บันทึกสินค้า
+                </button>
+                <button
+                  className="btn-secondary-premium"
+                  style={{ flex: 1, background: '#f1f5f9', border: 'none', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
+                  onClick={() => setShowAddModal(false)}
                 >
                   ยกเลิก
                 </button>
