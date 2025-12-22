@@ -1,122 +1,98 @@
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
+import "./dashboard-content.css";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/dashboard")
       .then((res) => res.json())
-      .then(setData);
+      .then((data) => {
+        setData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
-  if (!data) return null;
+  if (loading) {
+    return (
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>กำลังประมวลผลข้อมูล...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <div className="error-state">ไม่สามารถโหลดข้อมูลแดชบอร์ดได้</div>;
+  }
 
   return (
-    <>
-      <Navbar />
+    <div className="dashboard-content">
+      <header className="page-header">
+        <h1 className="page-title">ภาพรวมระบบ</h1>
+        <p className="page-description">สรุปข้อมูลการช่วยเหลือและสถานะสินค้าบริจาค</p>
+      </header>
 
-      <div className="container mt-5">
-        <h2 className="mb-4 fw-bold">Dashboard ผู้ดูแลระบบ</h2>
+      {/* Stats Section */}
+      <div className="stats-grid">
+        <StatCard title="ศูนย์ทั้งหมด" value={data.centersCount} icon="🏥" color="blue" />
+        <StatCard title="สินค้าในคลัง" value={data.itemsCount} icon="📦" color="purple" />
+        <StatCard title="คำขอทั้งหมด" value={data.requestsCount} icon="📑" color="green" />
+        <StatCard title="รอการอนุมัติ" value={data.pendingCount} icon="⏳" color="orange" highlight={data.pendingCount > 0} />
+      </div>
 
-        <div className="row g-4">
-
-          <DashboardCard
-            title="สินค้าบริจาค"
-            value={data.itemsCount}
-            color="primary"
-            link="/admin/items"
-          />
-
-          <DashboardCard
-            title="ศูนย์อพยพ"
-            value={data.centersCount}
-            color="success"
-            link="/admin/centers"
-          />
-
-          <DashboardCard
-            title="คำขอทั้งหมด"
-            value={data.requestsCount}
-            color="warning"
-            link="/admin/requests"
-          />
-
-          <DashboardCard
-            title="รออนุมัติ"
-            value={data.pendingCount}
-            color="danger"
-            link="/admin/requests"
-          />
-
-        </div>
-
-        {/* คำขอล่าสุด */}
-        <div className="card mt-5 shadow-sm">
-          <div className="card-header fw-bold">
-            คำขอรับบริจาคล่าสุด
+      {/* Tables Section */}
+      <div className="dashboard-grid">
+        <div className="table-card">
+          <div className="card-header">
+            <h3>คำขอรับบริจาคล่าสุด</h3>
+            <button className="text-btn">ดูทั้งหมด →</button>
           </div>
-          <div className="card-body p-0">
-            <table className="table mb-0">
-              <thead className="table-light">
+          <div className="table-wrapper">
+            <table>
+              <thead>
                 <tr>
-                  <th>ศูนย์</th>
+                  <th>ศูนย์อพยพ</th>
                   <th>สินค้า</th>
                   <th>จำนวน</th>
                   <th>สถานะ</th>
                 </tr>
               </thead>
               <tbody>
-                {data.latestRequests.map((r) => (
-                  <tr key={r._id}>
-                    <td>{r.centerName}</td>
-                    <td>{r.itemName}</td>
-                    <td>{r.quantity}</td>
+                {data.latestRequests?.map((req) => (
+                  <tr key={req._id}>
+                    <td>{req.centerName}</td>
+                    <td>{req.itemName}</td>
+                    <td>{req.quantity}</td>
                     <td>
-                      <span
-                        className={`badge ${
-                          r.status === "approved"
-                            ? "bg-success"
-                            : r.status === "rejected"
-                            ? "bg-danger"
-                            : "bg-warning text-dark"
-                        }`}
-                      >
-                        {r.status}
+                      <span className={`status-pill ${req.status}`}>
+                        {req.status === 'pending' ? 'รออนุมัติ' : req.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
                       </span>
                     </td>
                   </tr>
                 ))}
-                {data.latestRequests.length === 0 && (
-                  <tr>
-                    <td colSpan="4" className="text-center">
-                      ไม่มีข้อมูล
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
         </div>
-
       </div>
-    </>
+    </div>
   );
 }
 
-/* การ์ดเล็ก ๆ */
-function DashboardCard({ title, value, color, link }) {
+function StatCard({ title, value, icon, color, highlight }) {
   return (
-    <div className="col-md-3">
-      <div className={`card text-bg-${color} shadow-sm h-100`}>
-        <div className="card-body">
-          <h5 className="card-title">{title}</h5>
-          <p className="fs-3">{value}</p>
-          <a href={link} className="btn btn-light btn-sm">
-            ดูรายละเอียด
-          </a>
-        </div>
+    <div className={`stat-card ${color} ${highlight ? 'highlight' : ''}`}>
+      <div className="stat-icon">{icon}</div>
+      <div className="stat-info">
+        <p className="stat-title">{title}</p>
+        <h2 className="stat-value">{value.toLocaleString()}</h2>
       </div>
     </div>
   );

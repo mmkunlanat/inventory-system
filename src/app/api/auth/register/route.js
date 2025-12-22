@@ -1,19 +1,46 @@
-import { connectDB } from "@/lib/mongodb";
+import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export async function POST(req) {
-  await connectDB();
-  const body = await req.json();
+  try {
+    await connectDB();
+    const { username, password, role } = await req.json();
 
-  const exist = await User.findOne({ username: body.username });
-  if (exist) {
+    if (!username || !password) {
+      return NextResponse.json(
+        { error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+        { status: 400 }
+      );
+    }
+
+    const exist = await User.findOne({ username });
+    if (exist) {
+      return NextResponse.json(
+        { error: "มีชื่อผู้ใช้นี้ในระบบแล้ว" },
+        { status: 400 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      username,
+      password: hashedPassword,
+      role: role || "center"
+    });
+
+    return NextResponse.json({
+      message: "ลงทะเบียนสำเร็จ",
+      username: user.username
+    });
+  } catch (error) {
+    console.error("Register Error:", error);
     return NextResponse.json(
-      { error: "มีผู้ใช้นี้แล้ว" },
-      { status: 400 }
+      { error: "เกิดข้อผิดพลาดบนเซิร์ฟเวอร์" },
+      { status: 500 }
     );
   }
-
-  const user = await User.create(body);
-  return NextResponse.json(user);
 }

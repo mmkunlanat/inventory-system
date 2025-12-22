@@ -1,69 +1,61 @@
-import Navbar from "@/components/Navbar";
+"use client";
+import Link from "next/link";
+import "./home.css";
 
 export default function HomePage() {
   return (
-    <>
-      <Navbar />
+    <div className="home-container">
+      {/* Background Decor */}
+      <div className="bg-glow"></div>
 
-      <div className="container mt-5">
-        <div className="text-center mb-5">
-          <h1 className="fw-bold">
-            ระบบจัดสรรสินค้าบริจาค
+      <header className="home-header">
+        <div className="container">
+          <div className="logo">🆘 RescueSync</div>
+          <nav>
+            <Link href="/login" className="nav-link">เข้าสู่ระบบ</Link>
+            <Link href="/register" className="nav-link btn-signup">ลงทะเบียน</Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            จัดการสินค้าบริจาค <br />
+            <span>เพื่อช่วยเหลือได้ทันท่วงที</span>
           </h1>
-          <p className="text-muted">
-            ระบบบริหารจัดการสินค้าเพื่อช่วยเหลือศูนย์อพยพอย่างมีประสิทธิภาพ
+          <p className="hero-subtitle">
+            ระบบบริหารจัดการสินค้าคงคลังและศูนย์อพยพแบบครบวงจร
+            เชื่อมต่อผู้บริจาคและผู้รับเพื่อความโปร่งใสและรวดเร็ว
           </p>
+          <div className="hero-actions">
+            <Link href="/admin/dashboard" className="btn-primary">แผงควบคุมแอดมิน</Link>
+            <Link href="/center/request" className="btn-secondary">ขอรับบริจาคสำหรับศูนย์</Link>
+          </div>
         </div>
 
-        <div className="row g-4">
-
-          {/* การ์ด Admin */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">ผู้ดูแลระบบ (Admin)</h5>
-                <p className="card-text">
-                  จัดการสินค้า ศูนย์อพยพ และอนุมัติคำขอรับบริจาค
-                </p>
-                <a href="/admin/dashboard" className="btn btn-primary">
-                  เข้าสู่ระบบ Admin
-                </a>
-              </div>
-            </div>
+        <div className="hero-features">
+          <div className="feature-card">
+            <div className="f-icon">🏥</div>
+            <h3>940+ ศูนย์อพยพ</h3>
+            <p>ลงทะเบียนครอบคลุมทุกพื้นที่เสี่ยงภัย</p>
           </div>
-
-          {/* การ์ด Center */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">ศูนย์อพยพ</h5>
-                <p className="card-text">
-                  ส่งคำขอรับสินค้าบริจาคตามความต้องการ
-                </p>
-                <a href="/center/request" className="btn btn-success">
-                  ขอรับบริจาค
-                </a>
-              </div>
-            </div>
+          <div className="feature-card">
+            <div className="f-icon">📦</div>
+            <h3>จัดการ Inventory</h3>
+            <p>ติดตามสถานะสินค้าคงคลังแบบ Real-time</p>
           </div>
-
-          {/* การ์ด Login */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <h5 className="card-title">เข้าสู่ระบบ</h5>
-                <p className="card-text">
-                  สำหรับผู้ดูแลระบบและศูนย์อพยพ
-                </p>
-                <a href="/login" className="btn btn-outline-dark">
-                  Login
-                </a>
-              </div>
-            </div>
+          <div className="feature-card">
+            <div className="f-icon">⚡</div>
+            <h3>อนุมัติรวดเร็ว</h3>
+            <p>ระบบอนุมัติคำขอภายในไม่กี่นาที</p>
           </div>
-
         </div>
-      </div>
-    </>
+      </main>
+
+      <footer className="home-footer">
+        <p>© 2025 RescueSync Platform. All Rights Reserved.</p>
+      </footer>
+    </div>
   );
 }

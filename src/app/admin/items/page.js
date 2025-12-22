@@ -1,6 +1,8 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import "../dashboard/dashboard-content.css";
+
 
 export default function Page() {
   const router = useRouter();
@@ -8,11 +10,7 @@ export default function Page() {
   const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
-    if (sessionStorage.getItem("role") !== "admin") {
-      router.push("/login");
-    } else {
-      loadItems();
-    }
+    loadItems();
   }, []);
 
   const loadItems = async () => {
@@ -25,13 +23,17 @@ export default function Page() {
   const deleteItem = async (id) => {
     if (!confirm("ต้องการลบสินค้านี้หรือไม่")) return;
 
-    await fetch(`/api/items/${id}`, { method: "DELETE" });
+    await fetch("/api/items", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
     loadItems();
   };
 
   // บันทึกแก้ไข
   const saveEdit = async () => {
-    await fetch(`/api/items/${editItem._id}`, {
+    await fetch("/api/items", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editItem)
@@ -41,9 +43,13 @@ export default function Page() {
     loadItems();
   };
 
+
   return (
-    <div>
-      <h3>จัดการสินค้าบริจาค</h3>
+    <div className="dashboard-content">
+      <header className="page-header">
+        <h1 className="page-title">จัดการสินค้าบริจาค</h1>
+        <p className="page-description">ตรวจสอบ แก้ไข และลบสินค้าในคลังบริจาค</p>
+      </header>
 
       <table className="table table-bordered">
         <thead className="table-dark">

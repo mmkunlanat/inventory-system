@@ -1,11 +1,15 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = "mysecretkey"; // โปรเจกต์เรียนใช้ได้
+const SECRET = process.env.JWT_SECRET || "mysecretkey";
 
 export function createToken(payload) {
   return jwt.sign(payload, SECRET, { expiresIn: "1d" });
 }
 
 export function verifyToken(token) {
-  return jwt.verify(token, SECRET);
+  try {
+    return jwt.verify(token, SECRET);
+  } catch (err) {
+    return null;
+  }
 }
