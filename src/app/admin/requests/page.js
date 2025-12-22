@@ -16,13 +16,29 @@ export default function AdminRequests() {
     fetchRequests();
   }, []);
 
+  const [statusLoading, setStatusLoading] = useState(null);
+
   const updateStatus = async (id, status) => {
-    await fetch("/api/requests", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    fetchRequests();
+    setStatusLoading(id);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert("❌ " + (data.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ"));
+      } else {
+        await fetchRequests();
+      }
+    } catch (err) {
+      alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    } finally {
+      setStatusLoading(null);
+    }
   };
 
   return (
@@ -65,17 +81,37 @@ export default function AdminRequests() {
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
                           className="btn-action approve"
-                          style={{ background: '#dcfce7', color: '#16a34a', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                          style={{
+                            background: '#dcfce7',
+                            color: '#16a34a',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            opacity: statusLoading === r._id ? 0.5 : 1
+                          }}
                           onClick={() => updateStatus(r._id, "approved")}
+                          disabled={statusLoading === r._id}
                         >
-                          อนุมัติ
+                          {statusLoading === r._id ? "..." : "อนุมัติ"}
                         </button>
                         <button
                           className="btn-action reject"
-                          style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            opacity: statusLoading === r._id ? 0.5 : 1
+                          }}
                           onClick={() => updateStatus(r._id, "rejected")}
+                          disabled={statusLoading === r._id}
                         >
-                          ปฏิเสธ
+                          {statusLoading === r._id ? "..." : "ปฏิเสธ"}
                         </button>
                       </div>
                     ) : (

@@ -24,6 +24,18 @@ async function connectDB() {
   }
 
   cached.conn = await cached.promise;
+
+  // Try to repair indexes if needed
+  try {
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections({ name: 'users' }).toArray();
+    if (collections.length > 0) {
+      await db.collection('users').dropIndex('email_1').catch(() => { });
+    }
+  } catch (e) {
+    // Ignore index drop errors
+  }
+
   return cached.conn;
 }
 

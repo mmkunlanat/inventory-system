@@ -32,6 +32,8 @@ export async function POST(req) {
       role: "center" // Force center role for all new registrations
     });
 
+    console.log("User created successfully:", username);
+
     return NextResponse.json({
       message: "ลงทะเบียนสำเร็จ",
       username: user.username
@@ -39,7 +41,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Register Error:", error);
     return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดบนเซิร์ฟเวอร์" },
+      { error: "เกิดข้อผิดพลาดบนเซิร์ฟเวอร์: " + error.message },
       { status: 500 }
     );
   }
