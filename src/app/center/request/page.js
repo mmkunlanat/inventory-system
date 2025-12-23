@@ -10,6 +10,7 @@ function CenterRequestContent() {
     centerName: "",
     itemName: "",
     quantity: "",
+    unit: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -38,7 +39,7 @@ function CenterRequestContent() {
 
       if (res.ok) {
         setMessage({ type: "success", text: "ส่งคำขอรับบริจาคเรียบร้อยแล้ว แอดมินจะดำเนินการโดยเร็วที่สุด" });
-        setFormData({ ...formData, itemName: "", quantity: "" });
+        setFormData({ ...formData, itemName: "", quantity: "", unit: "" });
       } else {
         const data = await res.json();
         setMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาดในการส่งคำขอ" });
@@ -91,16 +92,28 @@ function CenterRequestContent() {
                 />
               </div>
 
-              <div className="form-group q-input">
-                <label>จำนวน</label>
-                <input
-                  name="quantity"
-                  type="number"
-                  placeholder="0"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="form-group q-unit-group">
+                <div className="q-input">
+                  <label>จำนวน</label>
+                  <input
+                    name="quantity"
+                    type="number"
+                    placeholder="0"
+                    value={formData.quantity}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="u-input">
+                  <label>หน่วย</label>
+                  <input
+                    name="unit"
+                    placeholder="เช่น ชิ้น, ลัง, ลิตร"
+                    value={formData.unit}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
 

@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import "../dashboard/dashboard-content.css";
 
-
 export default function AdminRequests() {
   const [requests, setRequests] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [statusLoading, setStatusLoading] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(null);
 
   const fetchRequests = async () => {
     const res = await fetch("/api/requests");
@@ -12,11 +14,16 @@ export default function AdminRequests() {
     setRequests(data);
   };
 
+  const fetchInventory = async () => {
+    const res = await fetch("/api/items");
+    const data = await res.json();
+    setInventory(data);
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchInventory();
   }, []);
-
-  const [statusLoading, setStatusLoading] = useState(null);
 
   const updateStatus = async (id, status) => {
     setStatusLoading(id);
@@ -33,6 +40,7 @@ export default function AdminRequests() {
         alert("❌ " + (data.error || "เกิดข้อผิดพลาดในการอัปเดตสถานะ"));
       } else {
         await fetchRequests();
+        await fetchInventory(); // Refresh stock after status change
       }
     } catch (err) {
       alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
@@ -41,12 +49,40 @@ export default function AdminRequests() {
     }
   };
 
+  const deleteRequest = async (id) => {
+    if (!confirm("คุณต้องการลบรายการคำขอนี้หรือไม่?")) return;
+
+    setDeleteLoading(id);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      if (res.ok) {
+        await fetchRequests();
+      } else {
+        alert("❌ ลบไม่สำเร็จ");
+      }
+    } catch (err) {
+      alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  const getStockInfo = (itemName) => {
+    const item = inventory.find(i => i.name.toLowerCase().trim() === itemName.toLowerCase().trim());
+    return item ? { quantity: item.quantity, unit: item.unit } : { quantity: 0, unit: "-" };
+  };
+
   return (
     <div className="dashboard-content">
       <header className="page-header">
         <div className="header-left">
           <h1 className="page-title">📑 คำขอรับบริจาค</h1>
-          <p className="page-description">ตรวจสอบและพิจารณาอนุมัติการกระจายสินค้าไปยังศูนย์อพยพต่างๆ</p>
+          <p className="page-description">ตรวจสอบและกดยืนยันการส่งสินค้าไปยังศูนย์อพยพ (เชื่อมโยงกับคลังสินค้า)</p>
         </div>
       </header>
 
@@ -59,70 +95,105 @@ export default function AdminRequests() {
             <thead>
               <tr>
                 <th>🏥 ศูนย์อพยพ</th>
-                <th>🎁 สินค้า</th>
-                <th>🔢 จำนวน</th>
+                <th>🎁 สินค้าที่ขอ</th>
+                <th>🔢 จำนวนที่ขอ</th>
+                <th>📦 คงเหลือในคลัง</th>
                 <th>📋 สถานะ</th>
                 <th>⚙️ จัดการคำขอ</th>
               </tr>
             </thead>
             <tbody>
-              {requests.map((r) => (
-                <tr key={r._id}>
-                  <td style={{ fontWeight: '700' }}>{r.centerName}</td>
-                  <td style={{ fontWeight: '600', color: 'var(--primary-dark)' }}>{r.itemName}</td>
-                  <td>{r.quantity.toLocaleString()}</td>
-                  <td>
-                    <span className={`status-pill ${r.status}`}>
-                      {r.status === 'pending' ? 'รออนุมัติ' : r.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
-                    </span>
-                  </td>
-                  <td>
-                    {r.status === "pending" ? (
-                      <div style={{ display: 'flex', gap: '8px' }}>
+              {requests.map((r) => {
+                const stock = getStockInfo(r.itemName);
+                const isOutOfStock = stock.quantity < r.quantity;
+
+                return (
+                  <tr key={r._id}>
+                    <td style={{ fontWeight: '700' }}>{r.centerName}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--primary-dark)' }}>{r.itemName}</td>
+                    <td>
+                      <span style={{ fontWeight: '700' }}>{r.quantity.toLocaleString()} {r.unit}</span>
+                    </td>
+                    <td style={{ fontWeight: '700' }}>
+                      <span style={{ color: isOutOfStock ? '#ef4444' : '#10b981' }}>
+                        {stock.quantity.toLocaleString()}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', marginLeft: '4px' }}>{stock.unit}</span>
+                      {isOutOfStock && r.status === 'pending' && (
+                        <div style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'normal' }}>⚠️ สินค้าไม่เพียงพอ</div>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`status-pill ${r.status}`}>
+                        {r.status === 'pending' ? 'รออนุมัติ' : r.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
                           className="btn-action approve"
                           style={{
-                            background: '#dcfce7',
-                            color: '#16a34a',
+                            background: r.status === 'approved' ? '#22c55e' : '#dcfce7',
+                            color: r.status === 'approved' ? '#ffffff' : '#16a34a',
                             border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '10px',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
                             cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
                             fontWeight: 'bold',
+                            fontSize: '13px',
                             opacity: statusLoading === r._id ? 0.5 : 1
                           }}
                           onClick={() => updateStatus(r._id, "approved")}
                           disabled={statusLoading === r._id}
                         >
-                          {statusLoading === r._id ? "..." : "อนุมัติ"}
+                          {statusLoading === r._id && r.status !== 'approved' ? "..." : "อนุมัติ"}
                         </button>
+
                         <button
                           className="btn-action reject"
                           style={{
-                            background: '#fee2e2',
-                            color: '#dc2626',
+                            background: r.status === 'rejected' ? '#ef4444' : '#fee2e2',
+                            color: r.status === 'rejected' ? '#ffffff' : '#dc2626',
                             border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '10px',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
                             cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
                             fontWeight: 'bold',
+                            fontSize: '13px',
                             opacity: statusLoading === r._id ? 0.5 : 1
                           }}
                           onClick={() => updateStatus(r._id, "rejected")}
                           disabled={statusLoading === r._id}
                         >
-                          {statusLoading === r._id ? "..." : "ปฏิเสธ"}
+                          {statusLoading === r._id && r.status !== 'rejected' ? "..." : "ปฏิเสธ"}
+                        </button>
+
+                        <button
+                          className="btn-action delete"
+                          style={{
+                            background: '#fff1f2',
+                            color: '#e11d48',
+                            border: '1px solid #fda4af',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            cursor: deleteLoading === r._id ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            opacity: deleteLoading === r._id ? 0.5 : 1
+                          }}
+                          onClick={() => deleteRequest(r._id)}
+                          disabled={deleteLoading === r._id}
+                        >
+                          {deleteLoading === r._id ? "..." : "🗑️ ลบ"}
                         </button>
                       </div>
-                    ) : (
-                      <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600 italic' }}>ดำเนินการแล้ว</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
               {requests.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
                     ไม่มีรายการคำขอในขณะนี้
                   </td>
                 </tr>
