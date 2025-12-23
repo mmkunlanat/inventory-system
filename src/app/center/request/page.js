@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import "./center-request.css";
 
-export default function CenterRequest() {
+function CenterRequestContent() {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     centerName: "",
@@ -111,5 +111,22 @@ export default function CenterRequest() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CenterRequest() {
+  return (
+    <Suspense fallback={
+      <div className="center-page-wrapper">
+        <Navbar />
+        <main className="center-main">
+          <div className="request-card">
+            <p style={{ textAlign: "center", padding: "40px" }}>กำลังโหลด...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <CenterRequestContent />
+    </Suspense>
   );
 }

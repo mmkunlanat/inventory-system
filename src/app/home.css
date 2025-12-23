@@ -88,6 +88,7 @@ nav {
 
 .hero-title span {
     background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -102,6 +103,7 @@ nav {
 
 .hero-actions {
     display: flex;
+    justify-content: center;
     gap: 16px;
     margin-bottom: 80px;
 }
@@ -141,6 +143,31 @@ nav {
 .feature-card:hover {
     transform: translateY(-5px);
     background: rgba(255, 255, 255, 0.05);
+}
+
+.feature-card-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.feature-card-link:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.card-action {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #6366f1;
+    font-weight: 500;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.feature-card-link:hover .card-action {
+    opacity: 1;
 }
 
 .f-icon {
