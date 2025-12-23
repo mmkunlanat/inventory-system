@@ -26,16 +26,18 @@ export default function HomePage() {
         </div>
 
         <div className="hero-features">
-          <div className="feature-card">
+          <Link href="/shelter-centers" className="feature-card feature-card-link">
             <div className="f-icon">🏥</div>
             <h3>940+ ศูนย์อพยพ</h3>
             <p>ลงทะเบียนครอบคลุมทุกพื้นที่เสี่ยงภัย</p>
-          </div>
-          <div className="feature-card">
+            <span className="card-action">ดูรายละเอียด →</span>
+          </Link>
+          <Link href="/inventory" className="feature-card feature-card-link feature-card-orange">
             <div className="f-icon">📦</div>
             <h3>จัดการ Inventory</h3>
             <p>ติดตามสถานะสินค้าคงคลังแบบ Real-time</p>
-          </div>
+            <span className="card-action">ดูรายละเอียด →</span>
+          </Link>
           <div className="feature-card">
             <div className="f-icon">⚡</div>
             <h3>อนุมัติรวดเร็ว</h3>

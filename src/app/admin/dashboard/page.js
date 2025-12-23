@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import "./dashboard-content.css";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,5 +109,18 @@ function StatCard({ title, value, icon, color, highlight }) {
         <h2 className="stat-value">{value.toLocaleString()}</h2>
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>กำลังโหลด...</p>
+      </div>
+    }>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }
