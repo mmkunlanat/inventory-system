@@ -11,14 +11,16 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const { centerName, itemName, quantity, unit } = await req.json();
+    const { centerName, items } = await req.json();
     await connectDB();
 
     const newRequest = await Request.create({
       centerName,
-      itemName,
-      quantity: Number(quantity),
-      unit,
+      items: items.map(item => ({
+        itemName: item.itemName,
+        quantity: Number(item.quantity),
+        unit: item.unit
+      })),
       status: "pending",
     });
 
@@ -29,7 +31,7 @@ export async function POST(req) {
 }
 
 export async function PUT(req) {
-  const { id, status, itemName, quantity, unit } = await req.json();
+  const { id, status } = await req.json();
   await connectDB();
 
   const request = await Request.findById(id);
@@ -42,43 +44,40 @@ export async function PUT(req) {
 
   // Handle Inventory changes only if status is changing
   if (newStatus !== oldStatus) {
-    // Determine target item (using either current request itemName or the new updated one)
-    const targetItemName = (itemName || request.itemName).trim();
-    const item = await Item.findOne({
-      name: { $regex: new RegExp(`^${targetItemName}$`, "i") }
-    });
+    // Process each item in the request
+    for (const reqItem of request.items) {
+      const targetItemName = reqItem.itemName.trim();
+      const dbItem = await Item.findOne({
+        name: { $regex: new RegExp(`^${targetItemName}$`, "i") }
+      });
 
-    if (item) {
-      // 1. If currently approved and moving to NOT approved -> Restore stock
-      if (oldStatus === "approved" && newStatus !== "approved") {
-        item.quantity += request.quantity;
-        await item.save();
-      }
-      // 2. If moving TO approved from NOT approved -> Deduct stock
-      else if (oldStatus !== "approved" && newStatus === "approved") {
-        const targetQuantity = quantity ? Number(quantity) : request.quantity;
-        if (item.quantity < targetQuantity) {
-          return NextResponse.json(
-            { error: `สินค้าในคลังไม่เพียงพอ (คงเหลือ ${item.quantity})` },
-            { status: 400 }
-          );
+      if (dbItem) {
+        // 1. If currently approved and moving to NOT approved -> Restore stock
+        if (oldStatus === "approved" && newStatus !== "approved") {
+          dbItem.quantity += reqItem.quantity;
+          await dbItem.save();
         }
-        item.quantity -= targetQuantity;
-        await item.save();
+        // 2. If moving TO approved from NOT approved -> Deduct stock
+        else if (oldStatus !== "approved" && newStatus === "approved") {
+          if (dbItem.quantity < reqItem.quantity) {
+            return NextResponse.json(
+              { error: `สินค้า ${targetItemName} ในคลังไม่เพียงพอ (คงเหลือ ${dbItem.quantity})` },
+              { status: 400 }
+            );
+          }
+          dbItem.quantity -= reqItem.quantity;
+          await dbItem.save();
+        }
+      } else if (newStatus === "approved") {
+        return NextResponse.json(
+          { error: `ไม่พบสินค้า "${targetItemName}" ในคลัง ไม่สามารถอนุมัติได้` },
+          { status: 404 }
+        );
       }
-    } else if (newStatus === "approved") {
-      // If trying to approve but no item found in DB
-      return NextResponse.json(
-        { error: "ไม่พบสินค้าชิ้นนี้ในคลัง ไม่สามารถอนุมัติได้" },
-        { status: 404 }
-      );
     }
   }
 
-  // Update fields if provided
-  if (itemName) request.itemName = itemName;
-  if (quantity) request.quantity = Number(quantity);
-  if (unit) request.unit = unit;
+  // Update status if provided
   if (status) request.status = status;
 
   await request.save();
