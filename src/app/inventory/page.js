@@ -98,14 +98,17 @@ export default function InventoryPage() {
     }, []);
 
     useEffect(() => {
-        const savedCenter = localStorage.getItem("lastCenter");
-        if (savedCenter) {
-            setCenterSearch(savedCenter);
-            setRequestData(prev => ({ ...prev, centerName: savedCenter }));
-            fetchHistory(savedCenter);
-        }
-        fetchItems();
-        fetchCenters();
+        const init = async () => {
+            const savedCenter = localStorage.getItem("lastCenter");
+            if (savedCenter) {
+                setCenterSearch(savedCenter);
+                setRequestData(prev => ({ ...prev, centerName: savedCenter }));
+                await fetchHistory(savedCenter);
+            }
+            await fetchItems();
+            await fetchCenters();
+        };
+        init();
     }, [fetchItems, fetchCenters, fetchHistory]);
 
     const handleSearch = (e) => {

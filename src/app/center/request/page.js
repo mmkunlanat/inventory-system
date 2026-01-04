@@ -34,16 +34,17 @@ function CenterRequestContent() {
   };
 
   useEffect(() => {
-    const savedCenter = localStorage.getItem("lastCenter");
-    if (savedCenter) {
-      setCenterName(savedCenter);
-      fetchHistory(savedCenter);
-    }
+    const init = async () => {
+      const savedCenter = localStorage.getItem("lastCenter");
+      if (savedCenter) {
+        setCenterName(savedCenter);
+        await fetchHistory(savedCenter);
+      }
 
-    if (searchParams.get("error") === "unauthorized_admin") {
-      setMessage({ type: "error", text: "คุณไม่มีสิทธิ์เข้าถึงหน้า Admin Dashboard กรุณาเข้าสู่ระบบด้วยสิทธิ์ผู้ดูแลระบบ" });
-    }
-    const fetchCenters = async () => {
+      if (searchParams.get("error") === "unauthorized_admin") {
+        setMessage({ type: "error", text: "คุณไม่มีสิทธิ์เข้าถึงหน้า Admin Dashboard กรุณาเข้าสู่ระบบด้วยสิทธิ์ผู้ดูแลระบบ" });
+      }
+
       try {
         const res = await fetch("/api/operation-centers");
         const data = await res.json();
@@ -54,7 +55,7 @@ function CenterRequestContent() {
         console.error("Error fetching centers:", error);
       }
     };
-    fetchCenters();
+    init();
   }, [searchParams]);
 
   const handleCenterChange = (e) => {
