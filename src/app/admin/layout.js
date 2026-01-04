@@ -39,6 +39,7 @@ export default function AdminLayout({ children }) {
         { name: "ศูนย์ปฏิบัติการ", path: "/admin/centers", icon: "🏥" },
         { name: "สินค้าบริจาค", path: "/admin/items", icon: "📦" },
         { name: "คำขอทั้งหมด", path: "/admin/requests", icon: "📑" },
+        { name: "การจ่ายสินค้า", path: "/admin/deliveries", icon: "🚚" },
     ];
 
     return (

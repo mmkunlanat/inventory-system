@@ -27,6 +27,23 @@ export default function InventoryPage() {
     });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState(null);
+    const [history, setHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+
+    const fetchHistory = async (name) => {
+        if (!name) return;
+        setHistoryLoading(true);
+        try {
+            const res = await fetch("/api/requests");
+            const data = await res.json();
+            const myHistory = data.filter(r => r.centerName === name);
+            setHistory(myHistory);
+        } catch (err) {
+            console.error("Error fetching history:", err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
 
     // Fetch data
     const fetchItems = async () => {
@@ -81,6 +98,12 @@ export default function InventoryPage() {
     };
 
     useEffect(() => {
+        const savedCenter = localStorage.getItem("lastCenter");
+        if (savedCenter) {
+            setCenterSearch(savedCenter);
+            setRequestData(prev => ({ ...prev, centerName: savedCenter }));
+            fetchHistory(savedCenter);
+        }
         fetchItems();
         fetchCenters();
     }, [search, filterCategory]);
@@ -92,11 +115,12 @@ export default function InventoryPage() {
 
     const openRequestModal = (item) => {
         setSelectedItem(item);
+        const savedCenter = localStorage.getItem("lastCenter") || "";
         setRequestData({
-            centerName: "",
+            centerName: savedCenter,
             quantity: 1,
         });
-        setCenterSearch("");
+        setCenterSearch(savedCenter);
         setMessage(null);
         setShowModal(true);
     };
@@ -112,6 +136,8 @@ export default function InventoryPage() {
         setCenterSearch(name);
         setRequestData({ ...requestData, centerName: name });
         setShowCenters(false);
+        localStorage.setItem("lastCenter", name);
+        fetchHistory(name);
     };
 
     const handleRequestSubmit = async (e) => {
@@ -135,6 +161,8 @@ export default function InventoryPage() {
 
             if (res.ok) {
                 setMessage({ type: "success", text: "ส่งคำขอเรียบร้อยแล้ว แอดมินจะดำเนินการตรวจสอบคลังและยืนยันอีกครั้ง" });
+                localStorage.setItem("lastCenter", requestData.centerName);
+                fetchHistory(requestData.centerName);
                 setTimeout(() => {
                     setShowModal(false);
                     setSelectedItem(null);
@@ -293,6 +321,55 @@ export default function InventoryPage() {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* History Section */}
+                {requestData.centerName && (
+                    <div className="history-section" style={{ marginTop: "60px", padding: "32px", background: "rgba(255,255,255,0.03)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ marginBottom: "24px" }}>
+                            <h2 style={{ fontSize: "24px", color: "white", marginBottom: "8px" }}>📦 ประวัติการขอรับของ ({requestData.centerName})</h2>
+                            <p style={{ color: "#94a3b8" }}>ติดตามสถานะรายการที่คุณเคยขอไว้จากหน้านี้</p>
+                        </div>
+
+                        {historyLoading ? (
+                            <p style={{ textAlign: "center", padding: "20px" }}>กำลังโหลดประวัติ...</p>
+                        ) : history.length > 0 ? (
+                            <div className="history-table-container" style={{ overflowX: "auto" }}>
+                                <table className="history-table" style={{ width: "100%", borderCollapse: "collapse", color: "white" }}>
+                                    <thead style={{ background: "rgba(255,255,255,0.05)" }}>
+                                        <tr>
+                                            <th style={{ padding: "16px", textAlign: "left" }}>วันที่</th>
+                                            <th style={{ padding: "16px", textAlign: "left" }}>รายการสินค้า</th>
+                                            <th style={{ padding: "16px", textAlign: "left" }}>สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((h) => (
+                                            <tr key={h._id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                                <td style={{ padding: "16px", fontSize: "13px" }}>{new Date(h.createdAt).toLocaleDateString("th-TH")}</td>
+                                                <td style={{ padding: "16px" }}>
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                        {(h.items || [{ itemName: h.itemName, quantity: h.quantity, unit: h.unit }]).map((it, idx) => (
+                                                            <div key={idx} style={{ fontSize: "14px" }}>
+                                                                • {it.itemName} ({it.quantity} {it.unit})
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: "16px" }}>
+                                                    <span className={`status-pill ${h.status}`}>
+                                                        {h.status === 'pending' ? 'รออนุมัติ' : h.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>ยังไม่มีประวัติการส่งคำขอ</p>
+                        )}
                     </div>
                 )}
             </main>
