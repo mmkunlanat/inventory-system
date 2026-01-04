@@ -95,102 +95,119 @@ export default function AdminRequests() {
             <thead>
               <tr>
                 <th>🏥 ศูนย์อพยพ</th>
-                <th>🎁 สินค้าที่ขอ</th>
-                <th>🔢 จำนวนที่ขอ</th>
-                <th>📦 คงเหลือในคลัง</th>
+                <th colSpan="3">🎁 รายการสินค้าที่ขอ (จำนวน/คลังคงเหลือ)</th>
                 <th>📋 สถานะ</th>
                 <th>⚙️ จัดการคำขอ</th>
               </tr>
             </thead>
             <tbody>
-              {requests.map((r) => {
-                const stock = getStockInfo(r.itemName);
-                const isOutOfStock = stock.quantity < r.quantity;
+              {requests.map((r) => (
+                <tr key={r._id}>
+                  <td style={{ fontWeight: '700', verticalAlign: 'top', paddingTop: '16px' }}>{r.centerName}</td>
+                  <td colSpan="3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {r.items.map((item, idx) => {
+                        const stock = getStockInfo(item.itemName);
+                        const isOutOfStock = stock.quantity < item.quantity;
+                        return (
+                          <div key={idx} style={{
+                            padding: '10px 14px',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                            <div>
+                              <div style={{ fontWeight: '700', color: 'var(--primary-dark)', fontSize: '14px' }}>
+                                {item.itemName}
+                              </div>
+                              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                                ขอ: <span style={{ color: '#ffffff', fontWeight: 'bold' }}>{item.quantity.toLocaleString()} {item.unit}</span>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>ในคลัง</div>
+                              <div style={{ fontWeight: '700', color: isOutOfStock ? '#ef4444' : '#10b981' }}>
+                                {stock.quantity.toLocaleString()} {stock.unit}
+                              </div>
+                              {isOutOfStock && r.status === 'pending' && (
+                                <div style={{ fontSize: '10px', color: '#ef4444', fontWeight: '600' }}>ไม่พอ</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </td>
+                  <td style={{ verticalAlign: 'top', paddingTop: '16px' }}>
+                    <span className={`status-pill ${r.status}`}>
+                      {r.status === 'pending' ? 'รออนุมัติ' : r.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
+                    </span>
+                  </td>
+                  <td style={{ verticalAlign: 'top', paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button
+                        className="btn-action approve"
+                        style={{
+                          background: r.status === 'approved' ? '#22c55e' : '#dcfce7',
+                          color: r.status === 'approved' ? '#ffffff' : '#16a34a',
+                          border: 'none',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          opacity: statusLoading === r._id ? 0.5 : 1
+                        }}
+                        onClick={() => updateStatus(r._id, "approved")}
+                        disabled={statusLoading === r._id}
+                      >
+                        {statusLoading === r._id && r.status !== 'approved' ? "..." : "อนุมัติ"}
+                      </button>
 
-                return (
-                  <tr key={r._id}>
-                    <td style={{ fontWeight: '700' }}>{r.centerName}</td>
-                    <td style={{ fontWeight: '600', color: 'var(--primary-dark)' }}>{r.itemName}</td>
-                    <td>
-                      <span style={{ fontWeight: '700' }}>{r.quantity.toLocaleString()} {r.unit}</span>
-                    </td>
-                    <td style={{ fontWeight: '700' }}>
-                      <span style={{ color: isOutOfStock ? '#ef4444' : '#10b981' }}>
-                        {stock.quantity.toLocaleString()}
-                      </span>
-                      <span style={{ color: '#94a3b8', fontSize: '12px', marginLeft: '4px' }}>{stock.unit}</span>
-                      {isOutOfStock && r.status === 'pending' && (
-                        <div style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'normal' }}>⚠️ สินค้าไม่เพียงพอ</div>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`status-pill ${r.status}`}>
-                        {r.status === 'pending' ? 'รออนุมัติ' : r.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          className="btn-action approve"
-                          style={{
-                            background: r.status === 'approved' ? '#22c55e' : '#dcfce7',
-                            color: r.status === 'approved' ? '#ffffff' : '#16a34a',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            opacity: statusLoading === r._id ? 0.5 : 1
-                          }}
-                          onClick={() => updateStatus(r._id, "approved")}
-                          disabled={statusLoading === r._id}
-                        >
-                          {statusLoading === r._id && r.status !== 'approved' ? "..." : "อนุมัติ"}
-                        </button>
+                      <button
+                        className="btn-action reject"
+                        style={{
+                          background: r.status === 'rejected' ? '#ef4444' : '#fee2e2',
+                          color: r.status === 'rejected' ? '#ffffff' : '#dc2626',
+                          border: 'none',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          opacity: statusLoading === r._id ? 0.5 : 1
+                        }}
+                        onClick={() => updateStatus(r._id, "rejected")}
+                        disabled={statusLoading === r._id}
+                      >
+                        {statusLoading === r._id && r.status !== 'rejected' ? "..." : "ปฏิเสธ"}
+                      </button>
 
-                        <button
-                          className="btn-action reject"
-                          style={{
-                            background: r.status === 'rejected' ? '#ef4444' : '#fee2e2',
-                            color: r.status === 'rejected' ? '#ffffff' : '#dc2626',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            cursor: statusLoading === r._id ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            opacity: statusLoading === r._id ? 0.5 : 1
-                          }}
-                          onClick={() => updateStatus(r._id, "rejected")}
-                          disabled={statusLoading === r._id}
-                        >
-                          {statusLoading === r._id && r.status !== 'rejected' ? "..." : "ปฏิเสธ"}
-                        </button>
-
-                        <button
-                          className="btn-action delete"
-                          style={{
-                            background: '#fff1f2',
-                            color: '#e11d48',
-                            border: '1px solid #fda4af',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            cursor: deleteLoading === r._id ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            opacity: deleteLoading === r._id ? 0.5 : 1
-                          }}
-                          onClick={() => deleteRequest(r._id)}
-                          disabled={deleteLoading === r._id}
-                        >
-                          {deleteLoading === r._id ? "..." : "🗑️ ลบ"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      <button
+                        className="btn-action delete"
+                        style={{
+                          background: '#fff1f2',
+                          color: '#e11d48',
+                          border: '1px solid #fda4af',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          cursor: deleteLoading === r._id ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          opacity: deleteLoading === r._id ? 0.5 : 1
+                        }}
+                        onClick={() => deleteRequest(r._id)}
+                        disabled={deleteLoading === r._id}
+                      >
+                        {deleteLoading === r._id ? "..." : "🗑️ ลบ"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
               {requests.length === 0 && (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
