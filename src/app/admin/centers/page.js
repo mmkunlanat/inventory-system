@@ -17,7 +17,10 @@ export default function AdminCenters() {
   }, []);
 
   useEffect(() => {
-    fetchCenters();
+    const load = async () => {
+      await fetchCenters();
+    };
+    load();
   }, [fetchCenters]);
 
   const addCenter = async () => {

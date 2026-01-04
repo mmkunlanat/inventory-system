@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import "./login.css";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
@@ -14,15 +14,14 @@ export default function LoginPage() {
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (searchParams.get("registered")) {
-      setSuccess("สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ");
-    }
-  }, [searchParams]);
+  // Derive success message from searchParams to avoid synchronous setState in effect
+  const registeredSuccess = searchParams.get("registered") ? "สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ" : "";
+  const displaySuccess = success || registeredSuccess;
 
   const login = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
@@ -41,11 +40,14 @@ export default function LoginPage() {
       }
 
       // Redirect based on role
-      if (data.role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/center/request");
-      }
+      setSuccess("เข้าสู่ระบบสำเร็จ กำลังนำคุณไปยังหน้าหลัก...");
+      setTimeout(() => {
+        if (data.role === "admin") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/center/request");
+        }
+      }, 1000);
     } catch (err) {
       setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
       setLoading(false);
@@ -99,7 +101,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={login} className="login-form">
-          {success && (
+          {displaySuccess && (
             <div className="success-message">
               <svg
                 width="20"
@@ -113,7 +115,7 @@ export default function LoginPage() {
                   fill="currentColor"
                 />
               </svg>
-              {success}
+              {displaySuccess}
             </div>
           )}
           {error && (
@@ -266,5 +268,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="login-container">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>กำลังโหลด...</p>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

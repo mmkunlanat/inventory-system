@@ -27,8 +27,11 @@ export default function AdminRequests() {
   }, []);
 
   useEffect(() => {
-    fetchRequests();
-    fetchInventory();
+    const load = async () => {
+      await fetchRequests();
+      await fetchInventory();
+    };
+    load();
   }, [fetchRequests, fetchInventory]);
 
   const updateStatus = async (id, status) => {

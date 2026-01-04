@@ -38,7 +38,10 @@ export default function ShelterCentersPage() {
     }, [search, filterCapacity, filterDistrict]);
 
     useEffect(() => {
-        fetchCenters();
+        const load = async () => {
+            await fetchCenters();
+        };
+        load();
     }, [fetchCenters]);
 
     const handleSearch = (e) => {

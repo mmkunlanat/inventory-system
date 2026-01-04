@@ -21,7 +21,10 @@ export default function AdminDeliveries() {
     }, []);
 
     useEffect(() => {
-        fetchDeliveries();
+        const load = async () => {
+            await fetchDeliveries();
+        };
+        load();
     }, [fetchDeliveries]);
 
     return (

@@ -12,16 +12,18 @@ function AdminDashboardContent() {
     if (searchParams.get("error") === "unauthorized_center") {
       alert("หน้านั้นสำหรับผู้ใช้งานระดับศูนย์อพยพเท่านั้น");
     }
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((data) => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/dashboard");
+        const data = await res.json();
         setData(data);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         setLoading(false);
-      });
+      }
+    };
+    load();
   }, [searchParams]);
 
   if (loading) {
