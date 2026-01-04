@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import "./inventory.css";
@@ -30,7 +30,7 @@ export default function InventoryPage() {
     const [history, setHistory] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
-    const fetchHistory = async (name) => {
+    const fetchHistory = useCallback(async (name) => {
         if (!name) return;
         setHistoryLoading(true);
         try {
@@ -43,10 +43,10 @@ export default function InventoryPage() {
         } finally {
             setHistoryLoading(false);
         }
-    };
+    }, []);
 
     // Fetch data
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch("/api/items");
@@ -83,9 +83,9 @@ export default function InventoryPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [search, filterCategory]);
 
-    const fetchCenters = async () => {
+    const fetchCenters = useCallback(async () => {
         try {
             const res = await fetch("/api/operation-centers");
             const data = await res.json();
@@ -95,7 +95,7 @@ export default function InventoryPage() {
         } catch (error) {
             console.error("Error fetching centers:", error);
         }
-    };
+    }, []);
 
     useEffect(() => {
         const savedCenter = localStorage.getItem("lastCenter");
@@ -106,7 +106,7 @@ export default function InventoryPage() {
         }
         fetchItems();
         fetchCenters();
-    }, [search, filterCategory]);
+    }, [fetchItems, fetchCenters, fetchHistory]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -210,7 +210,7 @@ export default function InventoryPage() {
                         ← กลับหน้าหลัก
                     </Link>
                     <h1>คลังสินค้าบริจาค</h1>
-                    <p>ติดตามสถานะและคลิกที่สินค้าเพื่อเลือก "ขอรับบริจาค" ไปยังศูนย์อพยพของคุณ</p>
+                    <p>ติดตามสถานะและคลิกที่สินค้าเพื่อเลือก &quot;ขอรับบริจาค&quot; ไปยังศูนย์อพยพของคุณ</p>
                 </div>
 
                 {/* Statistics */}

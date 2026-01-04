@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "../dashboard/dashboard-content.css";
 
 export default function AdminDeliveries() {
     const [deliveries, setDeliveries] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchDeliveries = async () => {
+    const fetchDeliveries = useCallback(async () => {
         try {
             const res = await fetch("/api/requests");
             const data = await res.json();
@@ -18,11 +18,11 @@ export default function AdminDeliveries() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchDeliveries();
-    }, []);
+    }, [fetchDeliveries]);
 
     return (
         <div className="dashboard-content">

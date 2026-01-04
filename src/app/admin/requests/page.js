@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "../dashboard/dashboard-content.css";
 
 export default function AdminRequests() {
@@ -8,7 +8,7 @@ export default function AdminRequests() {
   const [statusLoading, setStatusLoading] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
     const data = await res.json();
     // Sort: pending first, then others
@@ -18,18 +18,18 @@ export default function AdminRequests() {
       return new Date(b.createdAt) - new Date(a.createdAt); // Secondary sort by date
     });
     setRequests(sortedData);
-  };
+  }, []);
 
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     const res = await fetch("/api/items");
     const data = await res.json();
     setInventory(data);
-  };
+  }, []);
 
   useEffect(() => {
     fetchRequests();
     fetchInventory();
-  }, []);
+  }, [fetchRequests, fetchInventory]);
 
   const updateStatus = async (id, status) => {
     setStatusLoading(id);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import "./shelter-centers.css";
@@ -14,7 +14,7 @@ export default function ShelterCentersPage() {
     const [filterDistrict, setFilterDistrict] = useState("");
 
     // Fetch data
-    const fetchCenters = async () => {
+    const fetchCenters = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -35,11 +35,11 @@ export default function ShelterCentersPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [search, filterCapacity, filterDistrict]);
 
     useEffect(() => {
         fetchCenters();
-    }, [filterCapacity, filterDistrict]);
+    }, [fetchCenters]);
 
     const handleSearch = (e) => {
         e.preventDefault();

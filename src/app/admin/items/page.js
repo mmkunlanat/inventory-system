@@ -11,15 +11,15 @@ export default function Page() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", category: "", quantity: 0, unit: "" });
 
-  useEffect(() => {
-    loadItems();
-  }, []);
-
   const loadItems = async () => {
     const res = await fetch("/api/items");
     const data = await res.json();
     setItems(data);
   };
+
+  useEffect(() => {
+    loadItems();
+  }, []);
 
   // ลบสินค้า
   const deleteItem = async (id) => {

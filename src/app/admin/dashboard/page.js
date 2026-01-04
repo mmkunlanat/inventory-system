@@ -22,7 +22,7 @@ function AdminDashboardContent() {
         console.error(err);
         setLoading(false);
       });
-  }, []);
+  }, [searchParams]);
 
   if (loading) {
     return (
