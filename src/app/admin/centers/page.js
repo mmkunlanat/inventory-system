@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "../dashboard/dashboard-content.css";
 
 
@@ -10,15 +10,15 @@ export default function AdminCenters() {
   const [contact, setContact] = useState("");
   const [editCenter, setEditCenter] = useState(null);
 
-  const fetchCenters = async () => {
+  const fetchCenters = useCallback(async () => {
     const res = await fetch("/api/centers");
     const data = await res.json();
     setCenters(data);
-  };
+  }, []);
 
   useEffect(() => {
     fetchCenters();
-  }, []);
+  }, [fetchCenters]);
 
   const addCenter = async () => {
     if (!name) return alert("กรุณาระบุชื่อศูนย์");
