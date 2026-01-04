@@ -8,11 +8,12 @@ export async function GET() {
   try {
     await connectDB();
 
-    const [itemsCount, centersCount, requestsCount, pendingCount, latestRequests] = await Promise.all([
+    const [itemsCount, centersCount, requestsCount, pendingCount, deliveriesCount, latestRequests] = await Promise.all([
       Item.countDocuments(),
       Center.countDocuments(),
       Request.countDocuments(),
       Request.countDocuments({ status: "pending" }),
+      Request.countDocuments({ status: "approved" }),
       Request.find().sort({ createdAt: -1 }).limit(5).lean()
     ]);
 
@@ -21,6 +22,7 @@ export async function GET() {
       centersCount,
       requestsCount,
       pendingCount,
+      deliveriesCount,
       latestRequests,
     });
   } catch (error) {

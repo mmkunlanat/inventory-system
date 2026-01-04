@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import "./dashboard-content.css";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,21 +55,21 @@ export default function AdminDashboard() {
         <StatCard title="ไอเทมในคลัง" value={data.itemsCount} icon="📦" color="purple" />
         <StatCard title="คำขอทั้งหมด" value={data.requestsCount} icon="📑" color="green" />
         <StatCard title="รอพิจารณา" value={data.pendingCount} icon="⏳" color="orange" highlight={data.pendingCount > 0} />
+        <StatCard title="จ่ายของแล้ว" value={data.deliveriesCount || 0} icon="🚚" color="green" />
       </div>
 
       {/* Tables Section */}
       <div className="table-card">
         <div className="card-header">
           <h3>📦 รายการคำขอล่าสุด</h3>
-          <button className="text-btn">ดูรายการทั้งหมด →</button>
+          <button className="text-btn" onClick={() => window.location.href = '/admin/requests'}>ดูรายการทั้งหมด →</button>
         </div>
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
                 <th>📍 ศูนย์ปฏิบัติการ</th>
-                <th>🎁 สินค้าที่ต้องการ</th>
-                <th>🔢 จำนวน</th>
+                <th>🎁 รายการสินค้าทึ่ขอ</th>
                 <th>📋 สถานะ</th>
               </tr>
             </thead>
@@ -77,9 +77,23 @@ export default function AdminDashboard() {
               {data.latestRequests?.length > 0 ? (
                 data.latestRequests.map((req) => (
                   <tr key={req._id}>
-                    <td>{req.centerName}</td>
-                    <td>{req.itemName}</td>
-                    <td>{req.quantity}</td>
+                    <td style={{ fontWeight: '700' }}>{req.centerName}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {req.items?.length > 0 ? (
+                          req.items.map((item, idx) => (
+                            <div key={idx} style={{ fontSize: '13px' }}>
+                              • {item.itemName} ({item.quantity} {item.unit})
+                            </div>
+                          ))
+                        ) : (
+                          // Fallback for old single-item data
+                          <div style={{ fontSize: '13px' }}>
+                            • {req.itemName} ({req.quantity} {req.unit})
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <span className={`status-pill ${req.status}`}>
                         {req.status === 'pending' ? 'รออนุมัติ' : req.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
@@ -89,7 +103,7 @@ export default function AdminDashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '40px' }}>ไม่พบข้อมูลคำขอ</td>
+                  <td colSpan="3" style={{ textAlign: 'center', padding: '40px' }}>ไม่พบข้อมูลคำขอ</td>
                 </tr>
               )}
             </tbody>
@@ -109,5 +123,18 @@ function StatCard({ title, value, icon, color, highlight }) {
         <h2 className="stat-value">{value.toLocaleString()}</h2>
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>กำลังโหลด...</p>
+      </div>
+    }>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

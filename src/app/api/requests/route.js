@@ -11,13 +11,16 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const { centerName, itemName, quantity } = await req.json();
+    const { centerName, items } = await req.json();
     await connectDB();
 
     const newRequest = await Request.create({
       centerName,
-      itemName,
-      quantity: Number(quantity),
+      items: items.map(item => ({
+        itemName: item.itemName,
+        quantity: Number(item.quantity),
+        unit: item.unit
+      })),
       status: "pending",
     });
 
@@ -36,38 +39,67 @@ export async function PUT(req) {
     return NextResponse.json({ error: "Request not found" }, { status: 404 });
   }
 
-  // ถ้าอนุมัติ → ตัดสต๊อก
-  if (status === "approved") {
-    // Find item by name (case-insensitive and trimmed)
-    const trimmedItemName = request.itemName.trim();
-    const item = await Item.findOne({
-      name: { $regex: new RegExp(`^${trimmedItemName}$`, "i") }
-    });
+  const oldStatus = request.status;
+  const newStatus = status || oldStatus;
 
-    if (!item) {
-      return NextResponse.json(
-        { error: "Item not found in inventory" },
-        { status: 404 }
-      );
+  // Handle Inventory changes only if status is changing
+  if (newStatus !== oldStatus) {
+    // Process each item in the request
+    for (const reqItem of request.items) {
+      const targetItemName = reqItem.itemName.trim();
+      const dbItem = await Item.findOne({
+        name: { $regex: new RegExp(`^${targetItemName}$`, "i") }
+      });
+
+      if (dbItem) {
+        // 1. If currently approved and moving to NOT approved -> Restore stock
+        if (oldStatus === "approved" && newStatus !== "approved") {
+          dbItem.quantity += reqItem.quantity;
+          await dbItem.save();
+        }
+        // 2. If moving TO approved from NOT approved -> Deduct stock
+        else if (oldStatus !== "approved" && newStatus === "approved") {
+          if (dbItem.quantity < reqItem.quantity) {
+            return NextResponse.json(
+              { error: `สินค้า ${targetItemName} ในคลังไม่เพียงพอ (คงเหลือ ${dbItem.quantity})` },
+              { status: 400 }
+            );
+          }
+          dbItem.quantity -= reqItem.quantity;
+          await dbItem.save();
+        }
+      } else if (newStatus === "approved") {
+        return NextResponse.json(
+          { error: `ไม่พบสินค้า "${targetItemName}" ในคลัง ไม่สามารถอนุมัติได้` },
+          { status: 404 }
+        );
+      }
     }
-
-    // เช็คของพอไหม
-    if (item.quantity < request.quantity) {
-      return NextResponse.json(
-        { error: "สินค้าในคลังไม่เพียงพอ" },
-        { status: 400 }
-      );
-    }
-
-    // ตัดสต๊อก
-    item.quantity -= request.quantity;
-    await item.save();
   }
 
-  // อัปเดตสถานะคำขอ
-  request.status = status;
+  // Update status if provided
+  if (status) request.status = status;
+
   await request.save();
 
   return NextResponse.json({ success: true });
+}
+
+export async function DELETE(req) {
+  try {
+    const { id } = await req.json();
+    await connectDB();
+
+    const request = await Request.findById(id);
+    if (!request) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    await Request.findByIdAndDelete(id);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
