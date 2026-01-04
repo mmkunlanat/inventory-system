@@ -18,7 +18,10 @@ export default function Page() {
   };
 
   useEffect(() => {
-    loadItems();
+    const load = async () => {
+      await loadItems();
+    };
+    load();
   }, []);
 
   // ลบสินค้า
