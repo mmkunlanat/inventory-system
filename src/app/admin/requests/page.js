@@ -11,7 +11,13 @@ export default function AdminRequests() {
   const fetchRequests = async () => {
     const res = await fetch("/api/requests");
     const data = await res.json();
-    setRequests(data);
+    // Sort: pending first, then others
+    const sortedData = [...data].sort((a, b) => {
+      if (a.status === "pending" && b.status !== "pending") return -1;
+      if (a.status !== "pending" && b.status === "pending") return 1;
+      return new Date(b.createdAt) - new Date(a.createdAt); // Secondary sort by date
+    });
+    setRequests(sortedData);
   };
 
   const fetchInventory = async () => {
@@ -106,9 +112,11 @@ export default function AdminRequests() {
                   <td style={{ fontWeight: '700', verticalAlign: 'top', paddingTop: '16px' }}>{r.centerName}</td>
                   <td colSpan="3">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {r.items.map((item, idx) => {
-                        const stock = getStockInfo(item.itemName);
-                        const isOutOfStock = stock.quantity < item.quantity;
+                      {(r.items || [
+                        { itemName: r.itemName, quantity: r.quantity, unit: r.unit }
+                      ]).map((item, idx) => {
+                        const stock = getStockInfo(item.itemName || "");
+                        const isOutOfStock = stock.quantity < (item.quantity || 0);
                         return (
                           <div key={idx} style={{
                             padding: '10px 14px',
@@ -121,10 +129,10 @@ export default function AdminRequests() {
                           }}>
                             <div>
                               <div style={{ fontWeight: '700', color: 'var(--primary-dark)', fontSize: '14px' }}>
-                                {item.itemName}
+                                {item.itemName || "ไม่ระบุชื่อสินค้า"}
                               </div>
                               <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                                ขอ: <span style={{ color: '#ffffff', fontWeight: 'bold' }}>{item.quantity.toLocaleString()} {item.unit}</span>
+                                ขอ: <span style={{ color: '#ffffff', fontWeight: 'bold' }}>{(item.quantity || 0).toLocaleString()} {item.unit}</span>
                               </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
