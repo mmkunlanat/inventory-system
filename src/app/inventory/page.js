@@ -15,6 +15,19 @@ export default function InventoryPage() {
     const [search, setSearch] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
 
+    // Request Modal State
+    const [showModal, setShowModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [centers, setCenters] = useState([]);
+    const [centerSearch, setCenterSearch] = useState("");
+    const [showCenters, setShowCenters] = useState(false);
+    const [requestData, setRequestData] = useState({
+        centerName: "",
+        quantity: 1,
+    });
+    const [submitting, setSubmitting] = useState(false);
+    const [message, setMessage] = useState(null);
+
     // Fetch data
     const fetchItems = async () => {
         setLoading(true);
@@ -55,13 +68,86 @@ export default function InventoryPage() {
         }
     };
 
+    const fetchCenters = async () => {
+        try {
+            const res = await fetch("/api/operation-centers");
+            const data = await res.json();
+            if (data.success) {
+                setCenters(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching centers:", error);
+        }
+    };
+
     useEffect(() => {
         fetchItems();
+        fetchCenters();
     }, [search, filterCategory]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         fetchItems();
+    };
+
+    const openRequestModal = (item) => {
+        setSelectedItem(item);
+        setRequestData({
+            centerName: "",
+            quantity: 1,
+        });
+        setCenterSearch("");
+        setMessage(null);
+        setShowModal(true);
+    };
+
+    const handleCenterSearch = (e) => {
+        const val = e.target.value;
+        setCenterSearch(val);
+        setRequestData({ ...requestData, centerName: val });
+        setShowCenters(val.trim() !== "");
+    };
+
+    const selectCenter = (name) => {
+        setCenterSearch(name);
+        setRequestData({ ...requestData, centerName: name });
+        setShowCenters(false);
+    };
+
+    const handleRequestSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        setMessage(null);
+
+        try {
+            const res = await fetch("/api/requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    centerName: requestData.centerName,
+                    items: [{
+                        itemName: selectedItem.name,
+                        quantity: requestData.quantity,
+                        unit: selectedItem.unit
+                    }]
+                }),
+            });
+
+            if (res.ok) {
+                setMessage({ type: "success", text: "ส่งคำขอเรียบร้อยแล้ว แอดมินจะดำเนินการตรวจสอบคลังและยืนยันอีกครั้ง" });
+                setTimeout(() => {
+                    setShowModal(false);
+                    setSelectedItem(null);
+                }, 2000);
+            } else {
+                const data = await res.json();
+                setMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาด" });
+            }
+        } catch (err) {
+            setMessage({ type: "error", text: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้" });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const getCategoryIcon = (category) => {
@@ -96,7 +182,7 @@ export default function InventoryPage() {
                         ← กลับหน้าหลัก
                     </Link>
                     <h1>คลังสินค้าบริจาค</h1>
-                    <p>ติดตามสถานะสินค้าคงคลังแบบ Real-time</p>
+                    <p>ติดตามสถานะและคลิกที่สินค้าเพื่อเลือก "ขอรับบริจาค" ไปยังศูนย์อพยพของคุณ</p>
                 </div>
 
                 {/* Statistics */}
@@ -182,7 +268,7 @@ export default function InventoryPage() {
                         {items.map((item) => {
                             const qtyStatus = getQuantityStatus(item.quantity);
                             return (
-                                <div key={item._id} className="item-card">
+                                <div key={item._id} className="item-card clickable" onClick={() => openRequestModal(item)}>
                                     <div className="item-header">
                                         <span className="item-icon">{getCategoryIcon(item.category)}</span>
                                         <span className={`item-badge ${qtyStatus.class}`}>{qtyStatus.label}</span>
@@ -192,6 +278,11 @@ export default function InventoryPage() {
                                     <div className="item-quantity">
                                         <span className="qty-number">{item.quantity?.toLocaleString() || 0}</span>
                                         <span className="qty-unit">{item.unit || "ชิ้น"}</span>
+                                    </div>
+                                    <div className="item-action">
+                                        <button className="request-btn">
+                                            🎁 ขอรับสินค้านี้
+                                        </button>
                                     </div>
                                     <div className="item-updated">
                                         อัพเดท:{" "}
@@ -205,6 +296,77 @@ export default function InventoryPage() {
                     </div>
                 )}
             </main>
+
+            {/* Request Modal */}
+            {showModal && selectedItem && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="request-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-modal" onClick={() => setShowModal(false)}>×</button>
+
+                        <div className="modal-header">
+                            <span className="modal-icon">{getCategoryIcon(selectedItem.category)}</span>
+                            <div>
+                                <h2>ขอรับสินค้าบริจาค</h2>
+                                <p>รายการ: <strong>{selectedItem.name}</strong></p>
+                            </div>
+                        </div>
+
+                        {message && (
+                            <div className={`modal-alert ${message.type}`}>
+                                {message.type === 'success' ? '✅' : '❌'} {message.text}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleRequestSubmit} className="modal-form">
+                            <div className="modal-form-group relative">
+                                <label>ศูนย์อพยพ / หน่วยงาน</label>
+                                <input
+                                    type="text"
+                                    placeholder="พิมพ์ค้นหาชื่อศูนย์ของคุณ"
+                                    value={centerSearch}
+                                    onChange={handleCenterSearch}
+                                    required
+                                    autoComplete="off"
+                                />
+                                {showCenters && centers.filter(c => c.name.toLowerCase().includes(centerSearch.toLowerCase())).length > 0 && (
+                                    <ul className="modal-suggestions">
+                                        {centers
+                                            .filter(c => c.name.toLowerCase().includes(centerSearch.toLowerCase()))
+                                            .slice(0, 5)
+                                            .map((center, idx) => (
+                                                <li key={idx} onClick={() => selectCenter(center.name)}>
+                                                    <strong>{center.name}</strong>
+                                                    <small>อ.{center.district} ต.{center.subdistrict}</small>
+                                                </li>
+                                            ))
+                                        }
+                                    </ul>
+                                )}
+                            </div>
+
+                            <div className="modal-form-group">
+                                <label>จำนวนที่ต้องการ ({selectedItem.unit})</label>
+                                <div className="q-input-row">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={selectedItem.quantity}
+                                        value={requestData.quantity}
+                                        onChange={(e) => setRequestData({ ...requestData, quantity: e.target.value })}
+                                        required
+                                    />
+                                    <span className="unit-label">{selectedItem.unit}</span>
+                                </div>
+                                <span className="stock-info">คงเหลือในคลัง: {selectedItem.quantity} {selectedItem.unit}</span>
+                            </div>
+
+                            <button type="submit" className="modal-submit-btn" disabled={submitting}>
+                                {submitting ? "กำลังส่งคำขอ..." : "ยืนยันการส่งคำขอ"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <footer className="inventory-footer">
                 <p>© 2025 RescueSync Platform. All Rights Reserved.</p>
