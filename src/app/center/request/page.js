@@ -15,8 +15,31 @@ function CenterRequestContent() {
   const [centers, setCenters] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredCenters, setFilteredCenters] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchHistory = async (name) => {
+    if (!name) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch("/api/requests");
+      const data = await res.json();
+      const myHistory = data.filter(r => r.centerName === name);
+      setHistory(myHistory);
+    } catch (err) {
+      console.error("Error fetching history:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
+    const savedCenter = localStorage.getItem("lastCenter");
+    if (savedCenter) {
+      setCenterName(savedCenter);
+      fetchHistory(savedCenter);
+    }
+
     if (searchParams.get("error") === "unauthorized_admin") {
       setMessage({ type: "error", text: "คุณไม่มีสิทธิ์เข้าถึงหน้า Admin Dashboard กรุณาเข้าสู่ระบบด้วยสิทธิ์ผู้ดูแลระบบ" });
     }
@@ -71,6 +94,8 @@ function CenterRequestContent() {
   const selectCenter = (name) => {
     setCenterName(name);
     setShowSuggestions(false);
+    localStorage.setItem("lastCenter", name);
+    fetchHistory(name);
   };
 
   const submitRequest = async (e) => {
@@ -88,6 +113,8 @@ function CenterRequestContent() {
       if (res.ok) {
         setMessage({ type: "success", text: "ส่งคำขอรับบริจาคเรียบร้อยแล้ว แอดมินจะดำเนินการโดยเร็วที่สุด" });
         setItems([{ itemName: "", quantity: "", unit: "" }]);
+        localStorage.setItem("lastCenter", centerName);
+        fetchHistory(centerName);
       } else {
         const data = await res.json();
         setMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาดในการส่งคำขอ" });
@@ -209,8 +236,64 @@ function CenterRequestContent() {
             </button>
           </form>
         </div>
+
+        {centerName && (
+          <div className="request-card history-card" style={{ marginTop: "32px", marginBottom: "60px" }}>
+            <header className="request-header" style={{ textAlign: "left", marginBottom: "30px" }}>
+              <h2 className="title" style={{ fontSize: "24px" }}>ประวัติการขอรับบริจาค</h2>
+              <p className="subtitle">รายการที่เคยส่งคำขอของ: <strong>{centerName}</strong></p>
+            </header>
+
+            <div className="history-container">
+              {historyLoading ? (
+                <div style={{ textAlign: "center", padding: "40px" }}>
+                  <div className="spinner" style={{ margin: "0 auto 16px" }}></div>
+                  <p style={{ color: "#94a3b8" }}>กำลังโหลดประวัติ...</p>
+                </div>
+              ) : history.length > 0 ? (
+                <div className="history-list">
+                  {history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((h) => (
+                    <div className="history-item" key={h._id}>
+                      <div className="history-item-header">
+                        <div className="history-date">
+                          <span className="history-date-icon">📅</span>
+                          <span>
+                            {new Date(h.createdAt).toLocaleDateString("th-TH", {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })} น.
+                          </span>
+                        </div>
+                        <span className={`status-pill ${h.status}`}>
+                          {h.status === 'pending' ? '⏳ รออนุมัติ' : h.status === 'approved' ? '✅ อนุมัติแล้ว' : '❌ ปฏิเสธ'}
+                        </span>
+                      </div>
+                      <div className="history-items-list">
+                        {(h.items || [{ itemName: h.itemName, quantity: h.quantity, unit: h.unit }]).map((it, idx) => (
+                          <div key={idx} className="history-requested-item">
+                            <span className="item-dot">•</span>
+                            <span className="item-name">{it.itemName || "ไม่ระบุชื่อสินค้า"}</span>
+                            <span className="qty">{it.quantity?.toLocaleString()} {it.unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "60px", background: "rgba(255,255,255,0.01)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.03)" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "20px" }}>📑</div>
+                  <p style={{ color: "#94a3b8", fontSize: "16px" }}>ยังไม่มีประวัติการส่งคำขอสำหรับศูนย์นี้</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
-    </div>
+    </div >
   );
 }
 
