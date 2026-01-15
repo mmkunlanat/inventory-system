@@ -1,37 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+ Modern Request & History UI (Dark Theme)ระบบอินเทอร์เฟซผู้ใช้งานสำหรับการจัดการแบบฟอร์มคำขอ (Request Form) และการแสดงประวัติรายการ (History Section) ที่ถูกออกแบบด้วยสไตล์ Modern Dark Mode เน้นความสวยงามด้วย Glassmorphism และ Responsive Design✨ คุณสมบัติหลัก (Features)Glassmorphism Design: ใช้ backdrop-filter: blur และความโปร่งใสของสีพื้นหลังเพื่อให้ดูทันสมัยและมีมิติModern Color Palette: ใช้โทนสี Slate (#0f172a) และ Indigo (#6366f1) สไตล์เดียวกับ Tailwind CSSDynamic Item Management: รองรับการเพิ่ม/ลบรายการ (Add/Remove Item) ภายในแบบฟอร์มAutocomplete UI: มีการออกแบบ Dropdown สำหรับรายการแนะนำ (Suggestions List)Status Indicators: ระบบ Pill Status (Pending, Approved, Rejected) ที่แยกสีอย่างชัดเจนSmooth Animations: มีเอฟเฟกต์ slideUp เมื่อโหลดหน้าจอ และ Hover Effects ที่นุ่มนวลResponsive Support: ปรับเปลี่ยน Layout อัตโนมัติเมื่อดูผ่านมือถือ (Media Queries)🛠️ โครงสร้าง CSS (Structure)โค้ดถูกแบ่งออกเป็นส่วนหลักๆ ดังนี้:Wrapper & Layout: จัดการพื้นหลังแบบ Gradient และการจัดวางกึ่งกลางหน้าจอRequest Card: แบบฟอร์มสำหรับส่งคำขอ พร้อมระบบ Grid สำหรับแบ่งช่องกรอกข้อมูลItems Section: ส่วนสำหรับการจัดการรายการสินค้าหรืออุปกรณ์ (Dynamic Rows)Autocomplete System: เลเยอร์สำหรับแสดงผลการค้นหาข้อมูลอัตโนมัติHistory Section: ส่วนแสดงรายการย้อนหลังในรูปแบบ Card-list พร้อมสถานะ🎨 สไตล์ที่สำคัญส่วนประกอบรายละเอียดสไตล์BackgroundRadial Gradient (Indigo & Purple) บนพื้นหลังสีเข้มCardพื้นหลังสีขาวโปร่งแสง (3%) + Blur 20px + ขอบโค้ง 32pxButtonsใช้เงา (Box-shadow) แบบฟุ้งกระจายและยกตัวเมื่อ HoverInputsเปลี่ยนสีขอบและเพิ่ม Glow เมื่อมีการ Focus📦 วิธีใช้งาน (Usage)นำคลาส CSS เหล่านี้ไปประยุกต์ใช้กับโครงสร้าง HTML ของคุณ ดังตัวอย่างเบื้องต้น:HTML<div class="center-page-wrapper">
+    <main class="center-main">
+        <div class="request-card">
+            <header class="request-header">
+                <h1 class="title">สร้างคำขอใหม่</h1>
+                <p class="subtitle">กรุณากรอกรายละเอียดรายการที่คุณต้องการเบิก</p>
+            </header>
+            
+            <form class="request-form">
+                <div class="form-group">
+                    <label>หัวข้อคำขอ</label>
+                    <input type="text" placeholder="ระบุชื่อหัวข้อ...">
+                </div>
+                <button class="submit-request-btn">ส่งคำขอ</button>
+            </form>
+        </div>
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-"# inventory-system" 
+        <div class="request-card history-card">
+            <div class="history-list">
+                <div class="history-item">
+                    </div>
+            </div>
+        </div>
+    </main>
+</div>
+📱 การรองรับอุปกรณ์ (Responsive)Desktop: แสดงผลแบบ 2 Column ใน Grid ของฟอร์มMobile ( < 640px ): ปรับเป็น 1 Column อัตโนมัติ และลด Padding ของ Card เพื่อประหยัดพื้นที่
